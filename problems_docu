@@ -1,0 +1,9 @@
+CNN
+PROBLEM: cnn model doesnt predict because most of data (80%) is benign
+FIX: apply image edits (rotate etc) to the same dataset
+
+
+
+VIT
+PROBLEM: vit model doesnt predict because it isnt trained (maybe because of resources)
+FIX: train on better gpu
