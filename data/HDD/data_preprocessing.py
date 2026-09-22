@@ -6,8 +6,9 @@ import joblib
 
 csvColumns = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 
            'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
-df = pd.read_csv('./heart.csv')
-
+df = pd.read_csv('data/HDD/heart.csv')
+df = df.drop_duplicates()
+print(f"Shape: {df.shape}")
 # replace missing values (?)
 df = df.replace('?', np.nan)
 
@@ -23,7 +24,9 @@ df = df.dropna()
 
 # target variable
 # 0 healthy / 1 heart desease
-df['target'] = df['target'].apply(lambda x: 1 if x > 0 else 0)
+#df['target'] = df['target'].apply(lambda x: 1 if x > 0 else 0)
+df['target'] = df['target'].apply(lambda x: 0 if x > 0 else 1)
+
 
 X = df.drop('target', axis=1)
 y = df['target']
@@ -40,18 +43,20 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # save the scaler so the Streamlit app can reuse it
-joblib.dump(scaler, "scaler.pkl")
+joblib.dump(scaler, "data/HDD/scaler.pkl")
 
 # restore to pandas DataFrame for SHAP/LIME
 X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X.columns)
 X_test_scaled_df = pd.DataFrame(X_test_scaled, columns=X.columns)
 
 # save the preprocessed data
-X_train_scaled_df.to_csv("X_train_ready.csv", index=False)
-X_test_scaled_df.to_csv("X_test_ready.csv", index=False)
-y_train.to_csv("y_train_ready.csv", index=False)
-y_test.to_csv("y_test_ready.csv", index=False)
+X_train_scaled_df.to_csv("data/HDD/X_train_ready.csv", index=False)
+X_test_scaled_df.to_csv("data/HDD/X_test_ready.csv", index=False)
+y_train.to_csv("data/HDD/y_train_ready.csv", index=False)
+y_test.to_csv("data/HDD/y_test_ready.csv", index=False)
 
+print(X_train_scaled_df.shape, X_test_scaled_df.shape)
+print(y_train.shape, y_test.shape)
 
 #print(f"Διαστάσεις X_train: {X_train_scaled_df.shape}")
 #print(f"Διαστάσεις X_test: {X_test_scaled_df.shape}")

@@ -4,7 +4,8 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import (classification_report, confusion_matrix, 
+                             roc_auc_score, balanced_accuracy_score, ConfusionMatrixDisplay)
 import matplotlib.pyplot as plt
 
 # reproducibility
@@ -57,6 +58,23 @@ print(classification_report(y_test, y_pred, target_names=["Healthy (0)", "Heart 
 print("DNN Confusion Matrix")
 print(confusion_matrix(y_test, y_pred))
 
+# AUC and Balanced Accuracy
+auc_score = roc_auc_score(y_test, y_pred_probs)
+bal_acc = balanced_accuracy_score(y_test, y_pred)
+print(f"DNN AUC: {auc_score:.4f}")
+print(f"DNN Balanced Accuracy: {bal_acc:.4f}")
+
+# Confusion matrix as image
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy (0)", "Heart Disease (1)"])
+disp.plot()
+plt.title("Confusion Matrix - DNN")
+plt.savefig("outputs/evaluation/confusion_matrices/confusion_matrix_dnn.png", dpi=150)
+print("Confusion matrix saved as 'confusion_matrix_dnn.png'")
+
+
+
+
 dnn_model.save("saved_models/dnn_model.keras")
 print("DNN model saved as 'dnn_model.keras'")
 
@@ -80,5 +98,5 @@ axes[1].set_ylabel('Accuracy')
 axes[1].legend()
 
 plt.tight_layout()
-plt.savefig("dnn_training_curves.png", dpi=150)
+plt.savefig("outputs/evaluation/training_curves/dnn_training_curves.png", dpi=150)
 print("Training curves saved as 'dnn_training_curves.png'")

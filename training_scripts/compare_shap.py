@@ -6,7 +6,7 @@ import shap
 import matplotlib.pyplot as plt
 import os
 
-OUT_DIR = "training_scripts/xai_outputs"
+OUT_DIR = "outputs/xai/tabular/shap/"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 np.random.seed(42)
@@ -37,7 +37,7 @@ rf_model = joblib.load("saved_models/rf_model.pkl")
 rf_explainer = shap.TreeExplainer(rf_model)
 rf_shap = rf_explainer.shap_values(X_test)
 
-# handle shape: get class-1 (Heart Disease) values
+# handle shape: get class-1 (Heart Disease) valuesz
 if isinstance(rf_shap, list):
     rf_shap = rf_shap[1]
 elif len(rf_shap.shape) == 3:

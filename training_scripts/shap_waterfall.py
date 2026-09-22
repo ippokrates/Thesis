@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 from PIL import Image
 
-OUT_DIR = "training_scripts/xai_outputs"
+OUT_DIR = "outputs/xai/tabular/shap/"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 np.random.seed(42)
