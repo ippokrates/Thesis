@@ -14,11 +14,11 @@
 Thesis/
 │
 ├── app/
-│   └── app.py                        # Κεντρικη διαδραστικη εφαρμογη Streamlit
+│   └── app.py                        # Εφαρμογη Streamlit
 │
 ├── data/
-│   ├── HDD/                          # Δεδομενα Cleveland Heart Disease
-│   │   ├── heart.csv                 # Αρχικο συνολο δεδομενων
+│   ├── HDD/                          # Cleveland Heart Disease Dataset
+│   │   ├── heart.csv                 # Αρχικο dataset
 │   │   ├── data_preprocessing.py     # Script καθαρισμου και προεπεξεργασιας
 │   │   ├── scaler.pkl                # Αποθηκευμενο StandardScaler object
 │   │   ├── X_train_ready.csv         # Προεπεξεργασμενα δεδομενα εκπαιδευσης
@@ -26,29 +26,29 @@ Thesis/
 │   │   ├── y_train_ready.csv
 │   │   └── y_test_ready.csv
 │   │
-│   └── HAM10000/                     # Δεδομενα δερματικων αλλοιωσεων
+│   └── HAM10000/                     # HAM10000 Dataset
 │       ├── HAM10000_metadata.csv     # Μεταδεδομενα ασθενων και διαγνωσεων
-│       ├── image sort.py             # Script ταξινομησης εικονων σε κλασεις
+│       ├── image_sort.py             # Script ταξινομησης εικονων σε κλασεις
 │       └── skin_cancer_data/         # Φακελοι εικονων (benign / malignant)
 │
 ├── saved_models/                     # Αποθηκευμενα εκπαιδευμενα μοντελα
 │   ├── rf_model.pkl                  # Random Forest μοντελο
 │   ├── dnn_model.keras               # Deep Neural Network (.keras)
 │   ├── cnn_tl_skin_cancer.keras      # CNN MobileNetV2 (.keras)
-│   └── vit_model_hf.h5               # Βαρη Vision Transformer (HuggingFace)
+│   └── vit_model_hf.h5               # Βαρη Vision Transformer
 │
-├── diagnosis/                        # Φακελος αποθηκευσης συνθετων διαγνωσεων
+├── diagnosis/                        # Φακελος αποθηκευσης διαγνωσεων
 │
 ├── training_scripts/                 # Scripts εκπαιδευσης και αναλυσης
 │   ├── Random Forest/
-│   │   └── rf_model.py               # Εκπαιδευση και αξιολογηση Random Forest
+│   │   └── rf_model.py               # Εκπαιδευση Random Forest
 │   ├── DNN/
-│   │   └── dnn.py                    # Εκπαιδευση και αξιολογηση DNN
+│   │   └── dnn.py                    # Εκπαιδευση DNN
 │   ├── CNN/
-│   │   ├── cnn_imagenet.py           # Εκπαιδευση transfer learning CNN
-│   │   └── cnn_imagenet_gradcam.py   # Παραγωγη Grad-CAM χαρτων
+│   │   ├── cnn_imagenet.py           # Εκπαιδευση CNN
+│   │   └── cnn_imagenet_gradcam.py   # Παραγωγη Grad-CAM
 │   ├── ViT/
-│   │   ├── vit_model_hf.py           # Fine-tuning του Vision Transformer
+│   │   ├── vit_model_hf.py           # Εκπαιδευση Vision Transformer
 │   │   └── vit_attention_rollout_hf.py.py # Παραγωγη Attention Rollout
 │   ├── compare_shap.py               # Συγκριτικη αναλυση SHAP (RF vs DNN)
 │   ├── compare_lime.py               # Συγκριτικη αναλυση LIME (RF vs DNN)
@@ -60,7 +60,7 @@ Thesis/
 │   ├── evaluation/
 │   │   ├── training_curves/          # Καμπυλες loss/accuracy
 │   │   ├── confusion_matrices/       # Πινακες συγχυσης ολων των μοντελων
-│   │   └── roc_curves/               # Καμπυλες ROC και συγκρισεις
+│   │   └── roc_curves/               # Καμπυλες ROC
 │   └── xai/
 │       ├── tabular/                  # SHAP waterfall/beeswarm και LIME plots
 │       └── vision/                   # Grad-CAM και Attention Rollout plots
@@ -68,8 +68,8 @@ Thesis/
 ├── diagnose.py                       # CLI εργαλειο συνθετης διαγνωσης
 ├── cnn_worker.py                     # Subprocess worker για το CNN Grad-CAM
 ├── mappings.py                       # Λεξικα κλινικων ορων στα ελληνικα
-├── requirements.txt                  # Λιστα εξαρτησεων Python
-└── README.txt                       # Τεκμηριωση εργου
+├── requirements.txt                  # Λιστα Python dependencies
+└── README.md                       
 ```
 
 ---
