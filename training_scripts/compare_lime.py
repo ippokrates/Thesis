@@ -32,11 +32,9 @@ feature_mapping = {
 }
 readable_feature_names = [feature_mapping.get(col, col) for col in X_train.columns]
 
-# --- Load both models ---
 dnn_model = load_model("saved_models/dnn_model.keras")
 rf_model = joblib.load("saved_models/rf_model.pkl")
 
-# --- Prediction wrappers ---
 # LIME requires [P(class0), P(class1)] for each sample
 def dnn_predict_fn(data):
     preds = dnn_model.predict(data, verbose=0).flatten()
@@ -45,7 +43,7 @@ def dnn_predict_fn(data):
 def rf_predict_fn(data):
     return rf_model.predict_proba(data)
 
-# --- Create explainers ---
+# Create explainers 
 dnn_explainer = lime.lime_tabular.LimeTabularExplainer(
     training_data=X_train.values,
     feature_names=readable_feature_names,
@@ -60,7 +58,7 @@ rf_explainer = lime.lime_tabular.LimeTabularExplainer(
     mode='classification'
 )
 
-# --- Find one healthy and one sick patient ---
+# Find one healthy and one sick patient
 dnn_preds = (dnn_model.predict(X_test.values, verbose=0).flatten() > 0.5).astype(int)
 healthy_idx = np.where(dnn_preds == 0)[0][0]
 sick_idx = np.where(dnn_preds == 1)[0][0]
@@ -69,10 +67,10 @@ print(f"Selected patients: Healthy = index {healthy_idx}, Sick = index {sick_idx
 print(f"Actual labels:     Healthy patient = {y_test[healthy_idx]}, Sick patient = {y_test[sick_idx]}")
 print()
 
-# --- Explain both patients with both models ---
+# Explain both patients with both models
 for idx, label in [(healthy_idx, "Healthy"), (sick_idx, "Heart_Disease")]:
     print(f"\n{'='*60}")
-    print(f"Patient {idx} — Predicted: {label}")
+    print(f"Patient {idx} - Predicted: {label}")
     print(f"{'='*60}")
 
     # DNN explanation

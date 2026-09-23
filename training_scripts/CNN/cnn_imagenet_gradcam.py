@@ -8,14 +8,9 @@ model = tf.keras.models.load_model('saved_models/cnn_tl_skin_cancer.keras')
 
 # Print full architecture once to find the last conv layer name in MobileNetV2
 model.summary()
-
-# MobileNetV2's last convolutional layer before GAP is typically 'out_relu'
-# Confirm by checking the summary() output above — override if different
 last_conv_layer_name = 'out_relu'
 
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
-    # Functional model: build grad_model directly from existing layer outputs,
-    # no need to rebuild the model layer-by-layer (that only works for Sequential)
     grad_model = tf.keras.Model(
         inputs=model.input,
         outputs=[model.get_layer(last_conv_layer_name).output, model.output]
@@ -41,10 +36,6 @@ IMAGE_PATH = 'data/HAM10000/skin_cancer_data/malignant/ISIC_0030616.jpg'
 if not os.path.exists(IMAGE_PATH):
     print("Path/Image not found")
     exit()
-
-# img = tf.keras.utils.load_img(IMAGE_PATH, target_size=(128, 128))
-# img_array = tf.keras.utils.img_to_array(img)
-# img_array_scaled = np.expand_dims(img_array, axis=0) / 255.0
 
 
 img = tf.io.read_file(IMAGE_PATH)
@@ -77,6 +68,5 @@ plt.title("Grad-CAM")
 plt.axis('off')
 plt.tight_layout()
 plt.savefig('media/attention_rollout/FN/gradcam_cnn_malignant_ISIC_0030616.png', dpi=150, bbox_inches='tight')
-#plt.savefig('ISIC_0026343_tp.png', dpi=150, bbox_inches='tight')
 
 print("Saved gradcam")

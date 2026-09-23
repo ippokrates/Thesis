@@ -32,11 +32,9 @@ feature_mapping = {
 }
 readable_feature_names = [feature_mapping.get(col, col) for col in X_test.columns]
 
-# --- Load models ---
 rf_model = joblib.load("saved_models/rf_model.pkl")
 dnn_model = load_model("saved_models/dnn_model.keras")
 
-# --- Find interesting patients ---
 dnn_preds = (dnn_model.predict(X_test.values, verbose=0).flatten() > 0.5).astype(int)
 healthy_idx = np.where(dnn_preds == 0)[0][0]
 sick_idx = np.where(dnn_preds == 1)[0][0]
@@ -44,7 +42,7 @@ sick_idx = np.where(dnn_preds == 1)[0][0]
 print(f"Healthy patient: index {healthy_idx} (actual: {y_test[healthy_idx]})")
 print(f"Sick patient:    index {sick_idx} (actual: {y_test[sick_idx]})")
 
-# --- Try to load pre-computed SHAP values (from B3), otherwise compute ---
+# Try to load saved SHAP values
 try:
     rf_shap = np.load(f"{OUT_DIR}/rf_shap_values.npy")
     dnn_shap = np.load(f"{OUT_DIR}/dnn_shap_values.npy")
@@ -74,7 +72,6 @@ except FileNotFoundError:
 if len(dnn_shap.shape) > 2:
     dnn_shap = dnn_shap.squeeze()
 
-# --- Get base values ---
 rf_explainer = shap.TreeExplainer(rf_model)
 rf_base = rf_explainer.expected_value
 if isinstance(rf_base, (list, np.ndarray)):
@@ -86,11 +83,10 @@ dnn_base = dnn_model.predict(X_train.values[:100], verbose=0).flatten().mean()
 
 feature_names = readable_feature_names
 
-# --- Load scaler and inverse transform data for better presentation ---
 scaler = joblib.load("data/HDD/scaler.pkl")
 X_test_unscaled = scaler.inverse_transform(X_test)
 
-# --- Generate waterfall plots for both patients ---
+# Waterfall plots
 for idx, label in [(healthy_idx, "Healthy"), (sick_idx, "Heart_Disease")]:
     # RF waterfall
     rf_explanation = shap.Explanation(
@@ -101,7 +97,7 @@ for idx, label in [(healthy_idx, "Healthy"), (sick_idx, "Heart_Disease")]:
     )
     plt.figure()
     shap.plots.waterfall(rf_explanation, show=False)
-    plt.title(f"Random Forest — Patient {idx} ({label})", fontsize=14, fontweight='bold', pad=20)
+    plt.title(f"Random Forest - Patient {idx} ({label})", fontsize=14, fontweight='bold', pad=20)
     rf_tmp = f"{OUT_DIR}/tmp_rf_{idx}.png"
     plt.savefig(rf_tmp, dpi=150, bbox_inches='tight')
     plt.close()
@@ -115,12 +111,12 @@ for idx, label in [(healthy_idx, "Healthy"), (sick_idx, "Heart_Disease")]:
     )
     plt.figure()
     shap.plots.waterfall(dnn_explanation, show=False)
-    plt.title(f"DNN — Patient {idx} ({label})", fontsize=14, fontweight='bold', pad=20)
+    plt.title(f"DNN - Patient {idx} ({label})", fontsize=14, fontweight='bold', pad=20)
     dnn_tmp = f"{OUT_DIR}/tmp_dnn_{idx}.png"
     plt.savefig(dnn_tmp, dpi=150, bbox_inches='tight')
     plt.close()
 
-    # Combine side-by-side using PIL
+    # Combine images side by side
     img1 = Image.open(rf_tmp)
     img2 = Image.open(dnn_tmp)
     

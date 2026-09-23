@@ -31,10 +31,9 @@ import shap
 import lime
 import lime.lime_tabular
 
-# Silence TF noise
+# Silence TF 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-# Paths (relative to thesis root)
 THESIS_DIR    = Path(__file__).parent.parent.resolve()
 DIAGNOSE_PY   = THESIS_DIR / "diagnose.py"
 RF_MODEL_PATH = THESIS_DIR / "saved_models" / "rf_model.pkl"
@@ -177,10 +176,7 @@ def derm_consensus(cnn_prob: float, vit_prob: float) -> None:
         )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Cardiology helpers — SHAP
-# ═══════════════════════════════════════════════════════════════════════════════
-
+#  Cardiology helpers - SHAP
 def _get_shap_class1(shap_vals, expected_val):
     """
     Normalize SHAP output to (values_1d, base_value) for class 1.
@@ -211,14 +207,10 @@ def compute_rf_shap(rf_model, X_scaled: np.ndarray):
 
 
 def compute_dnn_shap(dnn_model, X_train: pd.DataFrame, X_scaled: np.ndarray):
-    """
-    Try DeepExplainer → GradientExplainer → KernelExplainer (progressive fallback).
-    Returns (shap_values_1d, base_value).
-    """
     background = X_train.values[:100]
     base_value = float(dnn_model.predict(background, verbose=0).flatten().mean())
 
-    # ── Attempt 1: DeepExplainer ─────────────────────────────────────────
+    # Attempt 1: DeepExplainer 
     try:
         exp = shap.DeepExplainer(dnn_model, background)
         sv  = exp.shap_values(X_scaled)
@@ -229,7 +221,7 @@ def compute_dnn_shap(dnn_model, X_train: pd.DataFrame, X_scaled: np.ndarray):
     except Exception:
         pass
 
-    # ── Attempt 2: GradientExplainer ────────────────────────────────────
+    # Attempt 2: GradientExplainer 
     try:
         exp = shap.GradientExplainer(dnn_model, background)
         sv  = exp.shap_values(X_scaled)
@@ -240,7 +232,7 @@ def compute_dnn_shap(dnn_model, X_train: pd.DataFrame, X_scaled: np.ndarray):
     except Exception:
         pass
 
-    # ── Attempt 3: KernelExplainer (slow but universal) ─────────────────
+    # Attempt 3: KernelExplainer (slow but universal)
     exp = shap.KernelExplainer(
         lambda x: dnn_model.predict(x, verbose=0).flatten(),
         background[:30],
@@ -266,10 +258,7 @@ def make_waterfall_fig(sv: np.ndarray, bv: float, raw_row: np.ndarray) -> plt.Fi
     return fig
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Cardiology helpers — LIME
-# ═══════════════════════════════════════════════════════════════════════════════
-
+#  Cardiology helpers - LIME
 def make_lime_fig(
     explainer: lime.lime_tabular.LimeTabularExplainer,
     predict_fn,
@@ -289,10 +278,6 @@ def make_lime_fig(
     return fig
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Cardiology — consensus badge
-# ═══════════════════════════════════════════════════════════════════════════════
-
 def cardio_consensus(rf_prob: float, dnn_prob: float) -> None:
     agree = (rf_prob > 0.5) == (dnn_prob > 0.5)
     if agree:
@@ -305,10 +290,6 @@ def cardio_consensus(rf_prob: float, dnn_prob: float) -> None:
         )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Tab 1 — Dermatology
-# ═══════════════════════════════════════════════════════════════════════════════
-
 def render_dermatology_tab() -> None:
     st.header("Ανάλυση Δερματικής Βλάβης / Skin Lesion Analysis")
     # st.markdown(
@@ -320,7 +301,7 @@ def render_dermatology_tab() -> None:
     # )
     #st.divider()
 
-    # ── Upload & settings ────────────────────────────────────────────────────
+    # Upload & settings 
     col_up, col_cfg = st.columns([3, 1])
 
     with col_up:
@@ -344,13 +325,13 @@ def render_dermatology_tab() -> None:
         )
         return
 
-    # Preview
+    # Preview of uploaded image
     st.image(uploaded, caption=f" **{uploaded.name}**", width=280)
 
     if not st.button("Ανάλυση / Analyze", type="primary", width='stretch'):
         return
 
-    # ── Inference via subprocess ─────────────────────────────────────────────
+    # Inference via subprocess 
     with tempfile.TemporaryDirectory() as tmpdir:
         suffix   = Path(uploaded.name).suffix or ".jpg"
         img_path = os.path.join(tmpdir, f"input{suffix}")
@@ -371,20 +352,17 @@ def render_dermatology_tab() -> None:
     vit_prob   = result["vit_prob"]
     output_png = result["output_png"]
 
-    # Read PNG bytes from diagnosis/ folder (persisted on disk — no temp dir needed)
     png_bytes = None
     if output_png and os.path.exists(output_png):
         with open(output_png, "rb") as f:
             png_bytes = f.read()
 
-    # ── Display composite PNG ────────────────────────────────────────────────
     if png_bytes:
         st.subheader("Αποτελέσματα XAI / XAI Results")
         st.image(png_bytes, width='stretch')
     else:
         st.warning("Δεν βρέθηκε composite PNG. Ελέγξτε τα logs παρακάτω.")
 
-    # ── Metrics ──────────────────────────────────────────────────────────────
     if cnn_prob is not None and vit_prob is not None:
         st.divider()
         st.subheader("Πιθανότητες / Probabilities")
@@ -424,7 +402,6 @@ def render_dermatology_tab() -> None:
     #         "*Propagates attention weights across all 12 transformer layers to produce a focus map.*"
     #     )
 
-    # ── Download ─────────────────────────────────────────────────────────────
     if png_bytes:
         st.download_button(
             label="Λήψη Αποτελέσματος / Download Result (PNG)",
@@ -433,11 +410,6 @@ def render_dermatology_tab() -> None:
             mime="image/png",
             width='stretch',
         )
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Tab 2 — Cardiology
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def render_cardiology_tab() -> None:
     st.header("Καρδιολογική Εκτίμηση Κινδύνου / Cardiology Risk Assessment")
@@ -450,11 +422,11 @@ def render_cardiology_tab() -> None:
     # )
     # st.divider()
 
-    # ── Load resources (cached after first call) ─────────────────────────────
+    # Load resources (cached after first call)
     rf_model, dnn_model, X_train, scaler = load_cardiology_resources()
     lime_explainer = load_lime_explainer(X_train)
 
-    # ── Input form ───────────────────────────────────────────────────────────
+    # Input form
     st.subheader("Κλινικά Δεδομένα Ασθενή / Patient Clinical Data")
 
     with st.form("cardiology_form"):
@@ -524,13 +496,13 @@ def render_cardiology_tab() -> None:
     if not submitted:
         return
 
-    # ── Preprocess ──────────────────────────────────────────────────────────
+    # Preprocess
     X_raw    = np.array([[age, sex, cp, trestbps, chol, fbs,
                           restecg, thalach, exang, oldpeak, slope, ca, thal]],
                         dtype=np.float64)
     X_scaled = scaler.transform(X_raw)
 
-    # ── Predictions ─────────────────────────────────────────────────────────
+    # Predictions
     rf_prob  = float(rf_model.predict_proba(X_scaled)[0, 1])
     dnn_prob = float(dnn_model.predict(X_scaled, verbose=0)[0, 0])
 
@@ -560,7 +532,7 @@ def render_cardiology_tab() -> None:
 
     cardio_consensus(rf_prob, dnn_prob)
 
-    # ── SHAP ─────────────────────────────────────────────────────────────────
+    # SHAP 
     st.divider()
     st.subheader("SHAP — Waterfall Plots")
     st.caption(
@@ -595,7 +567,7 @@ def render_cardiology_tab() -> None:
     #         "across all features, based on game theory (Shapley values).*"
     #     )
 
-    # ── LIME ─────────────────────────────────────────────────────────────────
+    # LIME
     st.divider()
     st.subheader("LIME — Local Explanations")
     st.caption(

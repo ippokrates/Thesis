@@ -46,7 +46,7 @@ LABELS = {0: "Benign (Καλοήθης)", 1: "Malignant (Κακοήθης)"}
 
 
 
-# ViT custom Keras layer must be identical to vit_model_hf.py
+# ViT custom Keras layer must be the same as vit_model_hf.py
 class ViTBackboneLayer(tf.keras.layers.Layer):
     """
     Wraps HuggingFace TFViTModel as a Keras layer.
@@ -231,13 +231,11 @@ def main():
         print(f"\n[ERROR] Η εικόνα δεν βρέθηκε: {image_path}")
         sys.exit(1)
 
-    # Validate model files
     for fpath, label in [(args.cnn_model, "CNN model"), (args.vit_weights, "ViT weights")]:
         if not os.path.isfile(fpath):
             print(f"\n[ERROR] {label} δεν βρέθηκε: {fpath}")
             sys.exit(1)
 
-    # Output directory
     output_dir = DIAGNOSIS_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -277,7 +275,6 @@ def main():
 
         if proc.returncode != 0:
             print("\n[ERROR] CNN worker απέτυχε:")
-            # Show from the beginning so the actual traceback is visible
             print(proc.stderr if proc.stderr else "(no stderr)")
             sys.exit(1)
 
@@ -312,7 +309,6 @@ def main():
     vit_label = "Malignant (Κακοήθης)" if vit_prob > 0.5 else "Benign (Καλοήθης)"
     #print(f"       -> ViT: {vit_label}  |  P(malignant) = {vit_prob*100:.1f}%  |  P(benign) = {(1-vit_prob)*100:.1f}%")
 
-    # Building final image
     print("Δημιουργία εικόνας")
     build_composite(
         image_path  = image_path,
@@ -324,7 +320,6 @@ def main():
         dpi         = args.dpi,
     )
 
-    # Results Summary 
     print("\n" + "-" * 60)
     print("  ΑΠΟΤΕΛΕΣΜΑΤΑ ")
     print("-" * 60)

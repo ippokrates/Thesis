@@ -2,10 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# 1. Load metadata CSV
 df = pd.read_csv('data/HAM10000/HAM10000_metadata.csv')
-
-# Map short codes to full readable names
 dx_names = {
     'nv': 'Melanocytic Nevi (nv)',
     'mel': 'Melanoma (mel)',
@@ -18,7 +15,6 @@ dx_names = {
 
 counts = df['dx'].map(dx_names).value_counts()
 
-# 2. Plot horizontal or vertical Bar Chart
 plt.figure(figsize=(10, 6))
 bars = plt.barh(counts.index, counts.values, color='#4C72B0')
 

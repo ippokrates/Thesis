@@ -31,22 +31,22 @@ feature_mapping = {
 }
 readable_feature_names = [feature_mapping.get(col, col) for col in X_test.columns]
 
-# --- RF SHAP ---
+# RF SHAP
 print("Computing RF SHAP values...")
 rf_model = joblib.load("saved_models/rf_model.pkl")
 rf_explainer = shap.TreeExplainer(rf_model)
 rf_shap = rf_explainer.shap_values(X_test)
 
-# handle shape: get class-1 (Heart Disease) valuesz
+# handle shape: get class-1 (Heart Disease) values
 if isinstance(rf_shap, list):
     rf_shap = rf_shap[1]
 elif len(rf_shap.shape) == 3:
     rf_shap = rf_shap[:, :, 1]
 
-# save for reuse in B4
+# save for reuse
 np.save(f"{OUT_DIR}/rf_shap_values.npy", rf_shap)
 
-# --- DNN SHAP ---
+# DNN SHAP
 print("Computing DNN SHAP values...")
 dnn_model = load_model("saved_models/dnn_model.keras")
 background = X_train.values[:100]
@@ -66,15 +66,15 @@ if isinstance(dnn_shap, list):
 if len(dnn_shap.shape) > 2:
     dnn_shap = dnn_shap.squeeze()
 
-# save for reuse in B4
+# save for reuse
 np.save(f"{OUT_DIR}/dnn_shap_values.npy", dnn_shap)
 
-# --- Individual summary plots ---
+# Summary plots
 print("Generating SHAP summary plots...")
 
 plt.figure(figsize=(10, 7))
 shap.summary_plot(rf_shap, X_test, feature_names=readable_feature_names, show=False)
-plt.title("Random Forest — SHAP Feature Importance", fontsize=14, fontweight='bold')
+plt.title("Random Forest - SHAP Feature Importance", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig("rf_shap_summary.png", dpi=150, bbox_inches='tight')
 plt.close()
@@ -82,16 +82,16 @@ print("Saved: rf_shap_summary.png")
 
 plt.figure(figsize=(10, 7))
 shap.summary_plot(dnn_shap, X_test, feature_names=readable_feature_names, show=False)
-plt.title("DNN — SHAP Feature Importance", fontsize=14, fontweight='bold')
+plt.title("DNN - SHAP Feature Importance", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig("dnn_shap_summary.png", dpi=150, bbox_inches='tight')
 plt.close()
 print("Saved: dnn_shap_summary.png")
 
-# --- Individual bar plots ---
+# Bar plots
 plt.figure(figsize=(10, 7))
 shap.summary_plot(rf_shap, X_test, feature_names=readable_feature_names, plot_type="bar", show=False)
-plt.title("Random Forest — Mean |SHAP|", fontsize=14, fontweight='bold')
+plt.title("Random Forest - Mean |SHAP|", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig("rf_shap_bar.png", dpi=150, bbox_inches='tight')
 plt.close()
@@ -99,13 +99,13 @@ print("Saved: rf_shap_bar.png")
 
 plt.figure(figsize=(10, 7))
 shap.summary_plot(dnn_shap, X_test, feature_names=readable_feature_names, plot_type="bar", show=False)
-plt.title("DNN — Mean |SHAP|", fontsize=14, fontweight='bold')
+plt.title("DNN - Mean |SHAP|", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig("dnn_shap_bar.png", dpi=150, bbox_inches='tight')
 plt.close()
 print("Saved: dnn_shap_bar.png")
 
-# --- Combine into side-by-side images using PIL ---
+# Combine images side by side 
 from PIL import Image
 
 for name, left_f, right_f in [
@@ -124,7 +124,6 @@ for name, left_f, right_f in [
     combined.save(f"{OUT_DIR}/{name}", dpi=(150, 150))
     print(f"Saved combined: {OUT_DIR}/{name}")
 
-# cleanup temp files
 import os
 for f in ["rf_shap_summary.png", "dnn_shap_summary.png", "rf_shap_bar.png", "dnn_shap_bar.png"]:
     os.remove(f)

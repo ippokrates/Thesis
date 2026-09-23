@@ -1,4 +1,3 @@
-# 1. Λεξικό για τα ονόματα των χαρακτηριστικών (Features)
 feature_names_mapping = {
     'age': 'Ηλικία (Έτη)',
     'sex': 'Φύλο',
@@ -15,7 +14,6 @@ feature_names_mapping = {
     'thal': 'Αιμάτωση (Θαλασσαιμία)'
 }
 
-# 2. Λεξικά για τις επιλογές (Dropdown menus) στο Streamlit
 sex_mapping = {
     0: "Γυναίκα", 
     1: "Άνδρας"

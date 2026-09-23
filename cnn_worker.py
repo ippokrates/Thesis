@@ -1,11 +1,11 @@
 """
-cnn_worker.py — CNN inference worker for diagnose.py
+cnn_worker.py - CNN worker for diagnose.py
 =====================================================
 Called as a subprocess by diagnose.py so that the CNN .keras model
 is loaded WITHOUT TF_USE_LEGACY_KERAS=1 (which is required by the ViT
 but breaks native tf.keras model deserialization).
 
-Usage (called internally by diagnose.py — not meant to be run directly):
+Usage (called internally by diagnose.py not meant to be run directly):
     python cnn_worker.py --image PATH --model PATH --alpha 0.4 --npy_out PATH
 
 Output:
@@ -14,7 +14,6 @@ Output:
 """
 
 import os
-# NO TF_USE_LEGACY_KERAS — this is the whole point of the subprocess
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import sys
@@ -24,7 +23,7 @@ import numpy as np
 import cv2
 import tensorflow as tf
 
-CNN_SIZE = (128, 128)  # (H, W) — must match training
+CNN_SIZE = (128, 128)  # (H, W) - must match training
 
 
 def load_image_for_model(image_path: str) -> np.ndarray:
@@ -49,7 +48,7 @@ def load_image_bgr(image_path: str) -> np.ndarray:
 
 
 def compute_gradcam(img_batch: np.ndarray, model, last_conv_layer_name: str = "out_relu") -> np.ndarray:
-    """Grad-CAM heatmap — float [0,1] at conv-layer spatial resolution."""
+    """Grad-CAM heatmap - float [0,1] at conv-layer spatial resolution."""
     grad_model = tf.keras.Model(
         inputs  = model.input,
         outputs = [model.get_layer(last_conv_layer_name).output, model.output],
@@ -81,33 +80,25 @@ def gradcam_overlay(heatmap: np.ndarray, original_bgr: np.ndarray, alpha: float)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CNN worker — internal use by diagnose.py")
+    parser = argparse.ArgumentParser(description="CNN worker - internal use by diagnose.py")
     parser.add_argument("--image",   required=True,          help="Path to input image")
     parser.add_argument("--model",   required=True,          help="Path to .keras model file")
     parser.add_argument("--alpha",   type=float, default=0.4, help="Grad-CAM overlay alpha")
     parser.add_argument("--npy_out", required=True,          help="Output path for Grad-CAM overlay (.npy)")
     args = parser.parse_args()
 
-    # Load CNN model — works fine WITHOUT TF_USE_LEGACY_KERAS
     model = tf.keras.models.load_model(args.model)
-
-    # Preprocess
     img_batch = load_image_for_model(args.image)
-
-    # Prediction
     cnn_prob = float(model.predict(img_batch, verbose=0)[0][0])
-
-    # Grad-CAM heatmap
     heatmap = compute_gradcam(img_batch, model, "out_relu")
-
-    # Build BGR overlay
     orig_bgr    = load_image_bgr(args.image)
     overlay_bgr = gradcam_overlay(heatmap, orig_bgr, args.alpha)
 
     # Save overlay to temp .npy file (passed back to diagnose.py)
     np.save(args.npy_out, overlay_bgr)
 
-    # Print result as JSON to stdout — diagnose.py reads this
+    # Print result as JSON to stdout
+    # diagnose.py reads this
     print(json.dumps({"cnn_prob": cnn_prob}))
     sys.stdout.flush()
 

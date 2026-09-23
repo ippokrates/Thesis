@@ -8,7 +8,7 @@ from sklearn.metrics import (classification_report, confusion_matrix,
                              roc_auc_score, balanced_accuracy_score, ConfusionMatrixDisplay)
 import matplotlib.pyplot as plt
 
-# reproducibility
+# For reproducibility
 np.random.seed(42)
 tf.random.set_seed(42)
 
@@ -20,12 +20,12 @@ y_test = pd.read_csv("data/HDD/y_test_ready.csv").values.ravel()
 
 dnn_model = Sequential()
 
-# input layer/first layer
+# input layer
 # input_dim=13 because there are 13 medical features
 # We use 16 artificial neurons and the 'relu' activation function.
 dnn_model.add(Dense(16, input_dim=13, activation='relu'))
 
-# turn off 20% of neurons to prevent "memorization" (overfitting)
+# turn off 20% of neurons to prevent overfitting
 dnn_model.add(Dropout(0.2))
 
 # Second Layer 8 neurons
@@ -43,7 +43,7 @@ early_stop = EarlyStopping(
     restore_best_weights=True
 )
 
-# train the Model
+# Train the Model
 # epochs=50 network looks at the dataset 50 times
 # batch_size=16: updates after looking at 16 patients at a time.
 history = dnn_model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=1, validation_split=0.2, callbacks=[early_stop])
@@ -78,7 +78,7 @@ print("Confusion matrix saved as 'confusion_matrix_dnn.png'")
 dnn_model.save("saved_models/dnn_model.keras")
 print("DNN model saved as 'dnn_model.keras'")
 
-# training curves
+# Training curves
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
 # Loss curve

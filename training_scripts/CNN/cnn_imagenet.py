@@ -16,10 +16,10 @@ BATCH_SIZE = 32
 
 data_dir = 'data/HAM10000/skin_cancer_data'
 
-# ── Stratified train/val split ────────────────────────────────────────────────
-# image_dataset_from_directory does NOT do stratified splitting — with imbalanced
-# datasets like HAM10000 (80% benign / 20% malignant), certain seeds produce
-# validation sets with almost no benign samples. We fix this by collecting all
+# Stratified train/val split
+# image_dataset_from_directory doesnt do stratified splitting with imbalanced
+# datasets (like HAM10000), certain seeds produce validation sets with almost no benign samples
+# We fix this by collecting all
 # file paths and labels, then using sklearn's stratified split.
 
 class_names = sorted(os.listdir(data_dir))  # ['benign', 'malignant']
@@ -43,12 +43,12 @@ print(f"Total images: {len(all_paths)}")
 for i, name in enumerate(class_names):
     print(f"  {name} (class {i}): {np.sum(all_labels == i)}")
 
-# Stratified 80/20 split — preserves class proportions in both sets
+# Stratified 80/20 split
 train_paths, val_paths, train_labels, val_labels = train_test_split(
     all_paths, all_labels,
     test_size=0.2,
     random_state=42,
-    stratify=all_labels   # ← THIS is what image_dataset_from_directory lacks
+    stratify=all_labels
 )
 
 print(f"\nTrain: {len(train_paths)} | Val: {len(val_paths)}")
@@ -56,7 +56,7 @@ for i, name in enumerate(class_names):
     print(f"  Train {name}: {np.sum(train_labels == i)} | Val {name}: {np.sum(val_labels == i)}")
 
 
-# ── Build tf.data.Dataset from file paths ─────────────────────────────────────
+# Build tf.data.Dataset from file paths
 def load_and_preprocess(path, label):
     """Read image file, decode, resize, and rescale to [0,1]."""
     img = tf.io.read_file(path)
@@ -74,7 +74,7 @@ val_dataset = tf.data.Dataset.from_tensor_slices((val_paths, val_labels))
 val_dataset = val_dataset.map(load_and_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
 val_dataset = val_dataset.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
-# ── Transfer learning backbone ─────────────────────────────────────────────
+# Transfer learning backbone
 base_model = MobileNetV2(
     input_shape=(IMG_HEIGHT, IMG_WIDTH, 3),
     include_top=False,
@@ -103,8 +103,8 @@ early_stop = EarlyStopping(
 )
 
 # class weight computed dynamically from actual training labels
-n_benign_train = int(np.sum(train_labels == 0))
-n_malignant_train = int(np.sum(train_labels == 1))
+# n_benign_train = int(np.sum(train_labels == 0))
+# n_malignant_train = int(np.sum(train_labels == 1))
 # class_weight = {0: 1.0, 1: n_benign_train / n_malignant_train}
 # print(f"\nClass weights: {{benign: {class_weight[0]:.2f}, malignant: {class_weight[1]:.2f}}}")
 
@@ -119,7 +119,7 @@ history = cnn_model.fit(
 cnn_model.save('saved_models/cnn_tl_skin_cancer.keras')
 print("CNN model saved as 'cnn_tl_skin_cancer.keras'")
 
-# training curves
+# Training curves
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
 axes[0].plot(history.history['loss'], label='Train Loss')
@@ -141,8 +141,7 @@ plt.savefig('outputs/evaluation/training_curves/cnn_training_curves.png', dpi=15
 print("Training curves saved as 'cnn_training_curves.png'")
 plt.close()
 
-# ── Evaluation: Classification Report & Confusion Matrix ──────────────────────
-# The val_dataset is already ordered (no shuffle) so labels stay aligned.
+# Classification Report
 y_true = []
 y_pred_prob = []
 
@@ -157,14 +156,15 @@ y_pred = (np.array(y_pred_prob) > 0.5).astype(int)
 print(f"\nEvaluation class order: {class_names}")
 print(f"Val set distribution: benign={np.sum(y_true == 0)}, malignant={np.sum(y_true == 1)}")
 
-print("\n── Classification Report (CNN / MobileNetV2) ──")
+print("\n Classification Report (CNN / MobileNetV2) ")
 print(classification_report(y_true, y_pred, target_names=class_names))
 
+# Confusion Matrix
 cm = confusion_matrix(y_true, y_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
 fig_cm, ax_cm = plt.subplots(figsize=(6, 5))
 disp.plot(cmap='Blues', ax=ax_cm)
-ax_cm.set_title('Confusion Matrix — CNN (MobileNetV2)')
+ax_cm.set_title('Confusion Matrix -- CNN (MobileNetV2)')
 fig_cm.tight_layout()
 fig_cm.savefig('outputs/evaluation/confusion_matrices/confusion_matrix_cnn_tl.png', dpi=150)
 print("Confusion matrix saved as 'confusion_matrix_cnn_tl.png'")

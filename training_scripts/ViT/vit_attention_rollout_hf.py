@@ -7,7 +7,7 @@ from transformers import TFViTModel
 import matplotlib.pyplot as plt
 import cv2
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# Config
 WEIGHTS_PATH = 'saved_models/vit_model_hf.h5'
 IMAGE_PATH   = 'data/HAM10000/skin_cancer_data/malignant/ISIC_0032400.jpg'
 OUTPUT_PATH  = 'vit_attention_rollout_hf_malignant_ISIC_0032400.png'
@@ -16,7 +16,7 @@ IMG_SIZE     = (224, 224)
 class ViTBackboneLayer(tf.keras.layers.Layer):
     """
     Input:  (batch, H, W, C) channels-last
-    Output: (batch, 197, 768) — CLS token + 196 patch tokens
+    Output: (batch, 197, 768) - CLS token + 196 patch tokens
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -42,7 +42,7 @@ def build_model():
     return tf.keras.Model(inputs=inputs, outputs=outputs, name='vit_hf_classifier')
 
 
-print("Rebuilding model architecture...")
+print("Rebuilding model architecture")
 model = build_model()
 
 if not os.path.exists(WEIGHTS_PATH):
@@ -82,27 +82,14 @@ vit_outputs = internal_vit(img_chw, output_attentions=True, training=False)
 # vit_outputs.attentions: tuple of 12 tensors, each (1, 12, 197, 197)
 attentions = vit_outputs.attentions
 
-# Rollout algorithm (Abnar & Zuidema, 2020)
-# For each transformer layer L:
-#   1. Average attention over all 12 heads → (197, 197)
-#   2. Account for residual connections: A_L = 0.5*A_L + 0.5*I
-#      (information flows both through attention AND directly via skip connection)
-#   3. Re-normalise rows so they sum to 1
-#   4. Propagate: rollout = A_L @ rollout   (layer-by-layer matrix product)
-#
-# After 12 layers, rollout[0, :] = how much the CLS token at the output
-# can be attributed to each of the 197 input tokens.
-# We take indices 1: to skip the CLS token itself → 196 patch importances.
-# Reshape 196 → 14×14 to match the image grid.
-
 rollout = np.eye(197)   # start with identity (each token attends only to itself)
 
 for layer_attn in attentions:
-    # layer_attn: (1, 12, 197, 197) → numpy → average over 12 heads
+    # layer_attn: (1, 12, 197, 197) -> numpy -> average over 12 heads
     attn_np  = layer_attn.numpy()[0]           # (12, 197, 197)
     attn_avg = np.mean(attn_np, axis=0)        # (197, 197)
 
-    # Residual connection: blend with identity, then row-normalise
+    # Residual connection
     attn_avg = attn_avg + np.eye(197)
     attn_avg = attn_avg / attn_avg.sum(axis=-1, keepdims=True)
 
@@ -121,12 +108,12 @@ cls_attention = (cls_attention - a_min) / (a_max - a_min + 1e-8)
 original_bgr    = cv2.imread(IMAGE_PATH)
 original_bgr    = cv2.resize(original_bgr, IMG_SIZE)
 
-# Upsample 14×14 attention map to 224×224
+# Upsample 14 x 14 attention map to 224 x 224
 heatmap_resized = cv2.resize(cls_attention, IMG_SIZE, interpolation=cv2.INTER_LINEAR)
 heatmap_uint8   = np.uint8(255 * heatmap_resized)
 heatmap_color   = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
 
-# Blend: 40% heatmap, 60% original
+# Blend 40% heatmap, 60% original
 overlay = heatmap_color * 0.4 + original_bgr * 0.6
 overlay = np.uint8(overlay)
 
@@ -147,7 +134,7 @@ axes[1].imshow(cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB))
 axes[1].set_title("Attention Rollout\n(upsampled to 224×224)")
 axes[1].axis('off')
 
-# plt.suptitle("ViT (HuggingFace) — Attention Rollout", fontsize=14, fontweight='bold')
+# plt.suptitle("ViT (HuggingFace) - Attention Rollout", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig(OUTPUT_PATH, dpi=150, bbox_inches='tight')
 print(f"Saved: {OUTPUT_PATH}")
