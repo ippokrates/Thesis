@@ -8,7 +8,7 @@
 
 ---
 
-## Δομη Εργου
+## Δομη
 
 ```text
 Thesis/
@@ -100,6 +100,20 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+---
+
+## Λήψη Δεδομένων HAM10000 (για επανεκπαίδευση)
+
+Λόγω μεγέθους οι εικόνες δεν περιλαμβάνονται στο github. Για να επανεκπαιδεύσετε τα μοντέλα:
+
+1. Κατεβάστε τις εικόνες από το Kaggle:  
+   https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000
+2. Τοποθετήστε τις εικόνες στον φάκελο:  
+   `data/HAM10000/all_ham_images/`
+3. Εκτελέστε το script ταξινόμησης:  
+   ```bash
+   python "data/HAM10000/image_sort.py"
+
 
 ---
 
