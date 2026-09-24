@@ -1,7 +1,7 @@
 # Ανάπτυξη Εργαλείου XAI για Ερμηνεία Αποφάσεων σε Συστήματα Υγείας
 
-Το συστημα εστιαζει σε δυο πεδια:
-1. Καρδιολογια: Προβλεψη πιθανοτητας καρδιοπαθειας απο κλινικα δεδομενα πινακα με χρηση Random Forest και Deep Neural Network (DNN), καθως και επεξηγηση αποφασεων με SHAP και LIME.
+Η εργασία εστιαζει σε δυο πεδια:
+1. Καρδιολογια: Προβλεψη πιθανοτητας καρδιοπαθειας απο κλινικα δεδομενα με χρηση Random Forest και Deep Neural Network (DNN), καθως και επεξηγηση αποφασεων με SHAP και LIME.
 2. Δερματολογια: Ταξινομηση δερματικων αλλοιωσεων (καλοηθεις / κακοηθεις) απο εικονες με χρηση Convolutional Neural Network (CNN / MobileNetV2) και Vision Transformer (ViT-B/16), καθως και οπτικη ερμηνεια με Grad-CAM και Attention Rollout.
 
 Ολα τα αποτελεσματα ενσωματωνονται σε μια διαδραστικη εφαρμογη (Streamlit) καθως και σε αυτονομο εργαλειο γραμμης εντολων (CLI).
@@ -35,7 +35,7 @@ Thesis/
 │   ├── rf_model.pkl                  # Random Forest μοντελο
 │   ├── dnn_model.keras               # Deep Neural Network (.keras)
 │   ├── cnn_tl_skin_cancer.keras      # CNN MobileNetV2 (.keras)
-│   └── vit_model_hf.h5               # Βαρη Vision Transformer
+│   └── vit_model_hf.h5               # Βάρη Vision Transformer
 │
 ├── diagnosis/                        # Φακελος αποθηκευσης διαγνωσεων
 │
@@ -76,12 +76,12 @@ Thesis/
 
 ## Εγκατασταση
 
-2. Δημιουργια εικονικου περιβαλλοντος (venv):
+1. Δημιουργια εικονικου περιβαλλοντος (venv):
 ```bash
 python3 -m venv .venv
 ```
 
-3. Ενεργοποιηση του περιβαλλοντος:
+2. Ενεργοποιηση του περιβαλλοντος:
 - Σε Linux / WSL2 / macOS:
 ```bash
 source .venv/bin/activate
@@ -95,9 +95,8 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 ```
 
-4. Εγκατασταση των dependencies:
+3. Εγκατασταση των dependencies:
 ```bash
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 ---
@@ -119,7 +118,7 @@ pip install -r requirements.txt
 
 ## Οδηγιες Χρησης Εφαρμογης
 
-Η εφαρμογη κλινικης αποφασης εκκινειται με την εντολη:
+Η διαδραστικη εφαρμογη Streamlit εκκινειται με την εντολη:
 
 ```bash
 streamlit run app/app.py
@@ -129,7 +128,7 @@ streamlit run app/app.py
 
 ## Αυτονομη Διαγνωση απο Γραμμη Εντολων
 
-Μπορειτε να εκτελεσετε το διαγνωστικο pipeline δερματολογιας απευθειας απο το τερματικο χωρις Streamlit:
+Μπορειτε να εκτελεσετε το διαγνωστικο script δερματολογιας απευθειας απο το τερματικο χωρις Streamlit:
 
 ```bash
 python diagnose.py --image διαδρομη/προς/εικονα.jpg
@@ -137,7 +136,6 @@ python diagnose.py --image διαδρομη/προς/εικονα.jpg
 
 Προαιρετικες παραμετροι:
 - `--alpha 0.5`: Ρυθμιση διαφανειας Grad-CAM overlay.
-- `--output_dir diagnosis/`: Φακελος αποθηκευσης της τελικης εικονας.
 
 Η συνθετη εικονα αποτελεσματος αποθηκευεται αυτοματα με timestamp στον φακελο `diagnosis/`.
 
@@ -147,7 +145,7 @@ python diagnose.py --image διαδρομη/προς/εικονα.jpg
 
 Ολα τα scripts εκτελουνται απο τον κεντρικο φακελο του εργου (`Thesis/`):
 
-1. Προεπεξεργασια Δεδομενων Καρδιολογιας:
+1. Προεπεξεργασια Δεδομενων Heart Disease Dataset:
 ```bash
 python data/HDD/data_preprocessing.py
 ```
@@ -186,7 +184,7 @@ python training_scripts/shap_analysis.py
 python training_scripts/CNN/cnn_imagenet_gradcam.py
 
 # Attention Rollout για επιλεγμενα δειγματα
-python "training_scripts/ViT/vit_attention_rollout_hf.py"
+python training_scripts/ViT/vit_attention_rollout_hf.py
 ```
 
 4. Διερευνητικη Αναλυση Δεδομενων (EDA):
