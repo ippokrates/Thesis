@@ -117,10 +117,6 @@ def load_lime_explainer(_X_train: pd.DataFrame):
     )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Dermatology helpers
-# ═══════════════════════════════════════════════════════════════════════════════
-
 def run_diagnose(image_path: str, alpha: float) -> dict:
     """
     Invoke diagnose.py as a subprocess (clean env — no TF_USE_LEGACY_KERAS).
