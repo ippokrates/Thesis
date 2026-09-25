@@ -200,7 +200,7 @@ python outputs/eda/correlation_heatmap.py
 
 * **Πηγαίος Κώδικας:** Όλος ο πρωτότυπος κώδικας του παρόντος αποθετηρίου (εφαρμογή Streamlit, CLI εργαλείο, scripts επεξεργασίας, εκπαίδευσης και παραγωγής εξηγήσεων XAI) διατίθεται υπό την άδεια [MIT License](LICENSE).
 * **Σύνολα Δεδομένων (Datasets):** Τα δεδομένα που χρησιμοποιήθηκαν δεν καλύπτονται από την άδεια του κώδικα και υπόκεινται αποκλειστικά στους όρους και τις άδειες των αρχικών δημιουργών τους:
-  * **HAM10000 Dataset:** Διατίθεται υπό την άδεια [Creative Commons Attribution-NonCommercial (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/) από τους Tschandl et al. (επιτρέπεται μόνο για ακαδημαϊκή / μη-εμπορική έρευνα).
+   * **HAM10000 Dataset:** Αντλήθηκε από το [Kaggle (Skin Cancer MNIST: HAM10000)](https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000) (αρχική δημοσίευση: Tschandl et al., Nature Scientific Data 2018) και διατίθεται υπό την άδεια [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) αποκλειστικά για μη-εμπορική / ερευνητική χρήση.
   * **Cleveland Heart Disease Dataset:** Προέρχεται από το αποθετήριο [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/45/heart+disease) (Detrano et al.).
 * **Προεκπαιδευμένα Βάρη:** Οι βασικές αρχιτεκτονικές (MobileNetV2 μέσω Keras, ViT μέσω Hugging Face) διέπονται από τις αντίστοιχες άδειες χρήσης των παρόχων τους.
 
