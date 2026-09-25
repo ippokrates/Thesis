@@ -193,3 +193,17 @@ python outputs/eda/class_distribution.py
 python outputs/eda/7class_distribution.py
 python outputs/eda/correlation_heatmap.py
 ```
+
+---
+
+---
+
+## Άδεια Χρήσης
+
+* **Πηγαίος Κώδικας:** Όλος ο πρωτότυπος κώδικας του παρόντος αποθετηρίου (εφαρμογή Streamlit, CLI εργαλείο, scripts επεξεργασίας, εκπαίδευσης και παραγωγής εξηγήσεων XAI) διατίθεται υπό την άδεια [MIT License](LICENSE).
+* **Σύνολα Δεδομένων (Datasets):** Τα δεδομένα που χρησιμοποιήθηκαν δεν καλύπτονται από την άδεια του κώδικα και υπόκεινται αποκλειστικά στους όρους και τις άδειες των αρχικών δημιουργών τους:
+  * **HAM10000 Dataset:** Διατίθεται υπό την άδεια [Creative Commons Attribution-NonCommercial (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/) από τους Tschandl et al. (επιτρέπεται μόνο για ακαδημαϊκή / μη-εμπορική έρευνα).
+  * **Cleveland Heart Disease Dataset:** Προέρχεται από το αποθετήριο [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/45/heart+disease) (Detrano et al.).
+* **Προεκπαιδευμένα Βάρη:** Οι βασικές αρχιτεκτονικές (MobileNetV2 μέσω Keras, ViT μέσω Hugging Face) διέπονται από τις αντίστοιχες άδειες χρήσης των παρόχων τους.
+
+> **Ιατρική Αποποίηση Ευθύνης (Disclaimer):** Το λογισμικό και τα μοντέλα αναπτύχθηκαν στα πλαίσια ακαδημαϊκής πτυχιακής εργασίας για ερευνητικούς και εκπαιδευτικούς σκοπούς. Δεν αποτελούν εγκεκριμένο ιατροτεχνολογικό προϊόν και δεν προορίζονται για πραγματική κλινική διάγνωση ή λήψη ιατρικών αποφάσεων σε ασθενείς.
