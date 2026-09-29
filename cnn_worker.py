@@ -24,6 +24,9 @@ import cv2
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
+for _g in tf.config.list_physical_devices('GPU'):
+    tf.config.experimental.set_memory_growth(_g, True)
+
 CNN_SIZE = (224, 224)  # (H, W) - must match training
 
 

@@ -9,8 +9,8 @@ import cv2
 
 # Config
 WEIGHTS_PATH = 'saved_models/vit_model_hf.h5'
-IMAGE_PATH   = 'data/HAM10000/skin_cancer_data/malignant/ISIC_0032400.jpg'
-OUTPUT_PATH  = 'TEST___vit_attention_rollout_hf_malignant_ISIC_0032400.png'
+IMAGE_PATH   = '' # eg data/HAM10000/skin_cancer_data/malignant/ISIC_0030539.jpg
+OUTPUT_PATH  = '' # eg /outputs/xai/vision/vit_attention_rollout_ISIC_0030539.png
 IMG_SIZE     = (224, 224)
 
 class ViTBackboneLayer(tf.keras.layers.Layer):

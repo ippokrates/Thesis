@@ -32,8 +32,6 @@ import cv2
 import matplotlib
 matplotlib.use("Agg")   # non-interactive backend
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from transformers import TFViTModel
 
 
 SCRIPT_DIR   = Path(__file__).parent.resolve()
@@ -43,52 +41,6 @@ CNN_SIZE = (224, 224)   # (H, W)
 VIT_SIZE = (224, 224)   # (H, W)
 DIAGNOSIS_DIR = SCRIPT_DIR / "diagnosis"
 LABELS = {0: "Benign (Καλοήθης)", 1: "Malignant (Κακοήθης)"}
-
-
-
-# ViT custom Keras layer must be the same as vit_model_hf.py
-class ViTBackboneLayer(tf.keras.layers.Layer):
-    """
-    Wraps HuggingFace TFViTModel as a Keras layer.
-    Input:  (batch, H, W, C)  channels-last
-    Output: (batch, 197, 768) CLS + 196 patch tokens
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.vit = TFViTModel.from_pretrained(
-            "google/vit-base-patch16-224", use_safetensors=False
-        )
-        self.vit.trainable = False
-
-    def call(self, inputs, training=False):
-        x = tf.transpose(inputs, perm=[0, 3, 1, 2])
-        return self.vit(x, training=False).last_hidden_state
-
-    def get_config(self):
-        return super().get_config()
-
-
-def build_vit_model():
-    # Rebuild the ViT architecture (same as vit_model_hf.py)
-    inputs       = tf.keras.Input(shape=VIT_SIZE + (3,), name="input_image")
-    backbone_out = ViTBackboneLayer(name="vit_backbone")(inputs)
-    cls_token    = tf.keras.layers.Lambda(lambda x: x[:, 0, :], name="cls_token")(backbone_out)
-    x            = tf.keras.layers.Dense(128, activation="relu", name="dense_head")(cls_token)
-    x            = tf.keras.layers.Dropout(0.3, name="dropout")(x)
-    outputs      = tf.keras.layers.Dense(1, activation="sigmoid", name="classifier")(x)
-    return tf.keras.Model(inputs=inputs, outputs=outputs, name="vit_hf_classifier")
-
-
-def load_image_for_model(image_path: str, size: tuple) -> np.ndarray:
-    # ViT path: normalize to [-1,1] (mean=0.5 std=0.5), must match vit_model_hf.py training.
-    img_raw     = tf.io.read_file(image_path)
-
-    # decode_image handles JPEG/PNG/GIF/BMP automatically
-    img_decoded = tf.image.decode_image(img_raw, channels=3, expand_animations=False)
-    img_resized = tf.image.resize(img_decoded, list(size))
-    img_scaled  = img_resized.numpy() / 127.5 - 1.0
-    return np.expand_dims(img_scaled.astype(np.float32), axis=0)   # (1, H, W, 3)
 
 
 def load_image_bgr(image_path: str, size: tuple) -> np.ndarray:
@@ -103,42 +55,6 @@ def load_image_bgr(image_path: str, size: tuple) -> np.ndarray:
         img = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
     return cv2.resize(img, (size[1], size[0]))   # cv2 takes (W, H)
 
-
-
-def compute_attention_rollout(img_batch: np.ndarray, vit_model) -> np.ndarray:
-    """
-    For each of the 12 transformer layers:
-      1. Average attention over 12 heads  (197, 197)
-      2. Add identity (residual connections): A = A + I
-      3. Row-normalise
-      4. Propagate: rollout = A @ rollout
-    Returns a 2-D float array (14x14) normalised to [0, 1].
-    """
-    backbone_layer = vit_model.get_layer("vit_backbone")
-    internal_vit   = backbone_layer.vit
-
-    # HuggingFace ViT expects channels-first (batch, C, H, W)
-    img_chw = tf.transpose(img_batch, perm=[0, 3, 1, 2])
-
-    vit_outputs = internal_vit(img_chw, output_attentions=True, training=False)
-    attentions  = vit_outputs.attentions   # tuple of 12 x (1, 12, 197, 197)
-
-    n_tokens = 197
-    rollout  = np.eye(n_tokens, dtype=np.float32)
-
-    for layer_attn in attentions:
-        attn_np  = layer_attn.numpy()[0]                              # (12, 197, 197)
-        attn_avg = np.mean(attn_np, axis=0)                          # (197, 197)
-        attn_avg = attn_avg + np.eye(n_tokens)                       # residual
-        attn_avg = attn_avg / attn_avg.sum(axis=-1, keepdims=True)   # row-norm
-        rollout  = attn_avg @ rollout
-
-    cls_attention = rollout[0, 1:]                           # (196,)
-    cls_attention = cls_attention.reshape(14, 14)            # (14, 14)
-
-    a_min, a_max  = cls_attention.min(), cls_attention.max()
-    cls_attention = (cls_attention - a_min) / (a_max - a_min + 1e-8)
-    return cls_attention
 
 
 def attention_overlay(attn_map: np.ndarray, original_bgr: np.ndarray, alpha: float = 0.4) -> np.ndarray:
@@ -177,8 +93,8 @@ def build_composite(
 
     panel_cfg = [
         (orig_rgb,                                     "Αρχική Εικόνα",                                            "#e0e0e0"),
-        (cv2.cvtColor(gradcam_bgr, cv2.COLOR_BGR2RGB), f"Grad-CAM  ·  CNN (MobileNetV2)\n{prob_label(cnn_prob)}", "#ff6b6b"),
-        (cv2.cvtColor(rollout_bgr, cv2.COLOR_BGR2RGB), f"Attention Rollout  ·  ViT-B/16\n{prob_label(vit_prob)}", "#4ecdc4"),
+        (cv2.cvtColor(gradcam_bgr, cv2.COLOR_BGR2RGB), f"Grad-CAM  ·  CNN (MobileNetV2)\n{prob_label(cnn_prob)}", "#e0e0e0"),
+        (cv2.cvtColor(rollout_bgr, cv2.COLOR_BGR2RGB), f"Attention Rollout  ·  ViT-B/16\n{prob_label(vit_prob)}", "#e0e0e0"),
     ]
 
     for ax, (img, title, color) in zip(axes, panel_cfg):
@@ -294,7 +210,79 @@ def main():
     cnn_label = "Malignant (Κακοήθης)" if cnn_prob > 0.5 else "Benign (Καλοήθης)"
     #print(f"       -> CNN: {cnn_label}  |  P(malignant) = {cnn_prob*100:.1f}%  |  P(benign) = {(1-cnn_prob)*100:.1f}%")
 
+    # CNN worker has exited at this point, so the parent claims the GPU only now.
+    import tensorflow as tf
+    for _g in tf.config.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(_g, True)
+    from transformers import TFViTModel
 
+    # ViT custom Keras layer, same as vit_model_hf.py
+    class ViTBackboneLayer(tf.keras.layers.Layer):
+        """
+        Wraps HuggingFace TFViTModel as a Keras layer.
+        Input:  (batch, H, W, C)  channels-last
+        Output: (batch, 197, 768) CLS + 196 patch tokens
+        """
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.vit = TFViTModel.from_pretrained(
+                "google/vit-base-patch16-224", use_safetensors=False
+            )
+            self.vit.trainable = False
+
+        def call(self, inputs, training=False):
+            x = tf.transpose(inputs, perm=[0, 3, 1, 2])
+            return self.vit(x, training=False).last_hidden_state
+
+        def get_config(self):
+            return super().get_config()
+
+    def build_vit_model():
+        # Rebuild the ViT architecture (same as vit_model_hf.py)
+        inputs       = tf.keras.Input(shape=VIT_SIZE + (3,), name="input_image")
+        backbone_out = ViTBackboneLayer(name="vit_backbone")(inputs)
+        cls_token    = tf.keras.layers.Lambda(lambda x: x[:, 0, :], name="cls_token")(backbone_out)
+        x            = tf.keras.layers.Dense(128, activation="relu", name="dense_head")(cls_token)
+        x            = tf.keras.layers.Dropout(0.3, name="dropout")(x)
+        outputs      = tf.keras.layers.Dense(1, activation="sigmoid", name="classifier")(x)
+        return tf.keras.Model(inputs=inputs, outputs=outputs, name="vit_hf_classifier")
+
+    def load_image_for_model(image_path: str, size: tuple) -> np.ndarray:
+        # ViT path: normalize to [-1,1] (mean=0.5 std=0.5), must match vit_model_hf.py training.
+        img_raw     = tf.io.read_file(image_path)
+        img_decoded = tf.image.decode_image(img_raw, channels=3, expand_animations=False)
+        img_resized = tf.image.resize(img_decoded, list(size))
+        img_scaled  = img_resized.numpy() / 127.5 - 1.0
+        return np.expand_dims(img_scaled.astype(np.float32), axis=0)   # (1, H, W, 3)
+
+    def compute_attention_rollout(img_batch: np.ndarray, vit_model) -> np.ndarray:
+        """
+        For each of the 12 transformer layers:
+          1. Average attention over 12 heads  (197, 197)
+          2. Add identity (residual connections): A = A + I
+          3. Row-normalise
+          4. Propagate: rollout = A @ rollout
+        Returns a 2-D float array (14x14) normalised to [0, 1].
+        """
+        backbone_layer = vit_model.get_layer("vit_backbone")
+        internal_vit   = backbone_layer.vit
+        img_chw = tf.transpose(img_batch, perm=[0, 3, 1, 2])
+        vit_outputs = internal_vit(img_chw, output_attentions=True, training=False)
+        attentions  = vit_outputs.attentions
+        n_tokens = 197
+        rollout  = np.eye(n_tokens, dtype=np.float32)
+        for layer_attn in attentions:
+            attn_np  = layer_attn.numpy()[0]
+            attn_avg = np.mean(attn_np, axis=0)
+            attn_avg = attn_avg + np.eye(n_tokens)
+            attn_avg = attn_avg / attn_avg.sum(axis=-1, keepdims=True)
+            rollout  = attn_avg @ rollout
+        cls_attention = rollout[0, 1:]
+        cls_attention = cls_attention.reshape(14, 14)
+        a_min, a_max  = cls_attention.min(), cls_attention.max()
+        cls_attention = (cls_attention - a_min) / (a_max - a_min + 1e-8)
+        return cls_attention
 
     print("Φόρτωση ViT-B/16")
     vit_model = build_vit_model()

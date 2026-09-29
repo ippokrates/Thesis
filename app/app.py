@@ -33,6 +33,8 @@ import lime.lime_tabular
 
 # Silence TF 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ.setdefault("TF_GPU_ALLOCATOR", "cuda_malloc_async")
+
 
 THESIS_DIR    = Path(__file__).parent.parent.resolve()
 DIAGNOSE_PY   = THESIS_DIR / "diagnose.py"
@@ -124,7 +126,7 @@ def run_diagnose(image_path: str, alpha: float) -> dict:
     Returns {"cnn_prob": float, "vit_prob": float, "output_png": str | None}.
     """
     clean_env = {k: v for k, v in os.environ.items() if k != "TF_USE_LEGACY_KERAS"}
-
+    clean_env["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
     # Snapshot of PNGs already in diagnosis/ before the run
     diagnosis_dir = THESIS_DIR / "diagnosis"
     before = set(diagnosis_dir.glob("*.png")) if diagnosis_dir.exists() else set()
@@ -142,7 +144,10 @@ def run_diagnose(image_path: str, alpha: float) -> dict:
     )
 
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr or "(no stderr from diagnose.py)")
+        detail = (proc.stderr or "")
+        if proc.stdout:
+            detail += ("\n" if detail else "") + proc.stdout
+        raise RuntimeError(detail or "(empty output from diagnose.py)")
 
     stdout = proc.stdout
     cnn_match = re.search(r"CNN.*?P\(malignant\)\s*=\s*(\d+\.?\d*)%", stdout)
@@ -156,7 +161,7 @@ def run_diagnose(image_path: str, alpha: float) -> dict:
     new_pngs = sorted(after - before)
     output_png = str(new_pngs[-1]) if new_pngs else None
 
-    return {"cnn_prob": cnn_prob, "vit_prob": vit_prob, "output_png": output_png}
+    return {"cnn_prob": cnn_prob, "vit_prob": vit_prob, "output_png": output_png, "stdout": stdout}
 
 
 def derm_consensus(cnn_prob: float, vit_prob: float) -> None:
@@ -336,7 +341,7 @@ def render_dermatology_tab() -> None:
             f.write(uploaded.getvalue())
 
         with st.spinner(
-            " *Ανάλυση εικόνας και παραγωγή επεξηγηματικών χαρτών*\n*Image analysis and production of explanatory maps*"
+            " *Ανάλυση εικόνας και παραγωγή επεξηγηματικών χαρτών*/*Image analysis and production of explanatory maps*"
         ):
             try:
                 result = run_diagnose(img_path, alpha)
@@ -347,6 +352,7 @@ def render_dermatology_tab() -> None:
     cnn_prob   = result["cnn_prob"]
     vit_prob   = result["vit_prob"]
     output_png = result["output_png"]
+    run_stdout = result.get("stdout", "")
 
     png_bytes = None
     if output_png and os.path.exists(output_png):
@@ -357,7 +363,10 @@ def render_dermatology_tab() -> None:
         st.subheader("Αποτελέσματα XAI / XAI Results")
         st.image(png_bytes, width='stretch')
     else:
-        st.warning("Δεν βρέθηκε composite PNG. Ελέγξτε τα logs παρακάτω.")
+        st.warning("Η διάγνωση απέτυχε / Diagnosis failed.")
+        if run_stdout.strip():
+            with st.expander("Λεπτομέρειες / Details"):
+                st.code(run_stdout)
 
     if cnn_prob is not None and vit_prob is not None:
         st.divider()

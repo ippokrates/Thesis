@@ -5,6 +5,9 @@ import cv2
 import os
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
+IMAGE_PATH   = '' # eg data/HAM10000/skin_cancer_data/malignant/ISIC_0030539.jpg
+OUTPUT_PATH  = '' # eg /outputs/xai/vision/cnn_gradcam_ISIC_0030539.png
+
 model = tf.keras.models.load_model('saved_models/cnn_tl_skin_cancer.keras')
 
 # Print full architecture once to find the last conv layer name in MobileNetV2
@@ -33,7 +36,6 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     return heatmap.numpy()
 
 
-IMAGE_PATH = 'data/HAM10000/skin_cancer_data/malignant/ISIC_0030616.jpg'
 if not os.path.exists(IMAGE_PATH):
     print("Path/Image not found")
     exit()
@@ -68,6 +70,6 @@ plt.imshow(cv2.cvtColor(superimposed_img, cv2.COLOR_BGR2RGB))
 plt.title("Grad-CAM")
 plt.axis('off')
 plt.tight_layout()
-plt.savefig('TEST___gradcam_cnn_malignant_ISIC_0030616.png', dpi=150, bbox_inches='tight')
+plt.savefig(OUTPUT_PATH, dpi=150, bbox_inches='tight')
 
 print("Saved gradcam")
