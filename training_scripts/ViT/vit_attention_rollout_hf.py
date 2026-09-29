@@ -10,7 +10,7 @@ import cv2
 # Config
 WEIGHTS_PATH = 'saved_models/vit_model_hf.h5'
 IMAGE_PATH   = 'data/HAM10000/skin_cancer_data/malignant/ISIC_0032400.jpg'
-OUTPUT_PATH  = 'vit_attention_rollout_hf_malignant_ISIC_0032400.png'
+OUTPUT_PATH  = 'TEST___vit_attention_rollout_hf_malignant_ISIC_0032400.png'
 IMG_SIZE     = (224, 224)
 
 class ViTBackboneLayer(tf.keras.layers.Layer):
@@ -59,7 +59,7 @@ if not os.path.exists(IMAGE_PATH):
 img_raw    = tf.io.read_file(IMAGE_PATH)
 img_decoded = tf.image.decode_jpeg(img_raw, channels=3)
 img_resized = tf.image.resize(img_decoded, list(IMG_SIZE))
-img_scaled = img_resized.numpy() / 255.0
+img_scaled = img_resized.numpy() / 127.5 - 1.0  # [-1,1], must match training
 img_batch  = np.expand_dims(img_scaled, axis=0)
 
 # Get prediction from the model

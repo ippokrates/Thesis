@@ -7,13 +7,14 @@ from transformers import TFViTModel
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, average_precision_score, roc_auc_score, roc_curve, precision_recall_curve, auc
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # Config
 IMG_SIZE   = (224, 224)
 BATCH_SIZE = 32
-EPOCHS     = 10
+EPOCHS     = 30
 DATA_DIR   = 'data/HAM10000/skin_cancer_data'
 WEIGHTS_PATH = 'saved_models/vit_model_hf.h5'   # weights-only .h5 file
 
@@ -101,11 +102,11 @@ for i, name in enumerate(class_names):
 
 # Build tf.data.Dataset
 def load_and_preprocess(path, label):
-    """Read image file, decode, resize, and rescale to [0,1]."""
+    """Read image file, decode, resize, and normalize to [-1,1] (ViT, mean=0.5 std=0.5)."""
     img = tf.io.read_file(path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, list(IMG_SIZE))
-    img = img / 255.0   # rescale to [0,1]
+    img = img / 127.5 - 1.0
     return img, label
 
 
@@ -125,12 +126,12 @@ model.summary()
 model.compile(
     optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
     loss='binary_crossentropy',
-    metrics=['accuracy']
+    metrics=['accuracy', tf.keras.metrics.AUC(name='auc')]
 )
 
 early_stop = EarlyStopping(
     monitor='val_loss',
-    patience=3,
+    patience=5,
     restore_best_weights=True
 )
 
@@ -200,3 +201,37 @@ fig_cm.tight_layout()
 fig_cm.savefig('outputs/evaluation/confusion_matrices/confusion_matrix_vit_hf.png', dpi=150)
 print("Confusion matrix saved as 'confusion_matrix_vit_hf.png'")
 plt.close(fig_cm)
+
+# Extra metrics (imbalanced data): balanced acc, MCC, ROC-AUC, PR-AUC
+print("\nExtra metrics (ViT-B/16 / HuggingFace):")
+print("balanced acc:", balanced_accuracy_score(y_true, y_pred))
+print("MCC:", matthews_corrcoef(y_true, y_pred))
+print("ROC-AUC:", roc_auc_score(y_true, y_pred_prob))
+print("PR-AUC:", average_precision_score(y_true, y_pred_prob))
+
+# ROC curve
+fpr, tpr, _ = roc_curve(y_true, y_pred_prob)
+fig_roc, ax_roc = plt.subplots(figsize=(6, 5))
+ax_roc.plot(fpr, tpr, label=f'ViT (AUC={auc(fpr, tpr):.4f})')
+ax_roc.plot([0, 1], [0, 1], linestyle='--', label='Chance')
+ax_roc.set_xlabel('False Positive Rate')
+ax_roc.set_ylabel('True Positive Rate')
+ax_roc.set_title('ROC Curve - ViT-B/16 (HuggingFace)')
+ax_roc.legend()
+fig_roc.tight_layout()
+fig_roc.savefig('outputs/evaluation/roc_curves/roc_curve_vit.png', dpi=150)
+print("ROC curve saved as 'roc_curve_vit.png'")
+plt.close(fig_roc)
+
+# PR curve
+precision, recall, _ = precision_recall_curve(y_true, y_pred_prob)
+fig_pr, ax_pr = plt.subplots(figsize=(6, 5))
+ax_pr.plot(recall, precision, label=f'ViT (AP={average_precision_score(y_true, y_pred_prob):.4f})')
+ax_pr.set_xlabel('Recall')
+ax_pr.set_ylabel('Precision')
+ax_pr.set_title('PR Curve - ViT-B/16 (HuggingFace)')
+ax_pr.legend()
+fig_pr.tight_layout()
+fig_pr.savefig('outputs/evaluation/roc_curves/pr_curve_vit.png', dpi=150)
+print("PR curve saved as 'pr_curve_vit.png'")
+plt.close(fig_pr)

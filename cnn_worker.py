@@ -22,17 +22,18 @@ import argparse
 import numpy as np
 import cv2
 import tensorflow as tf
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-CNN_SIZE = (128, 128)  # (H, W) - must match training
+CNN_SIZE = (224, 224)  # (H, W) - must match training
 
 
 def load_image_for_model(image_path: str) -> np.ndarray:
-    """Same pipeline as training: tf.io → decode → resize → /255."""
+    """Same pipeline as training: tf.io → decode → resize → [-1,1] (MobileNetV2)."""
     img_raw     = tf.io.read_file(image_path)
     img_decoded = tf.image.decode_image(img_raw, channels=3, expand_animations=False)
     img_resized = tf.image.resize(img_decoded, list(CNN_SIZE))
-    img_scaled  = img_resized.numpy() / 255.0
-    return np.expand_dims(img_scaled.astype(np.float32), axis=0)  # (1, 128, 128, 3)
+    img_scaled  = preprocess_input(img_resized.numpy())
+    return np.expand_dims(img_scaled.astype(np.float32), axis=0)  # (1, 224, 224, 3)
 
 
 def load_image_bgr(image_path: str) -> np.ndarray:

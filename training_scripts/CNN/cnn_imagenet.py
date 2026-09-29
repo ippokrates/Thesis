@@ -7,11 +7,13 @@ from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, average_precision_score, roc_auc_score, roc_curve, precision_recall_curve, auc
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-IMG_HEIGHT = 128
-IMG_WIDTH = 128
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
 BATCH_SIZE = 32
 
 data_dir = 'data/HAM10000/skin_cancer_data'
@@ -58,11 +60,11 @@ for i, name in enumerate(class_names):
 
 # Build tf.data.Dataset from file paths
 def load_and_preprocess(path, label):
-    """Read image file, decode, resize, and rescale to [0,1]."""
+    """Read image file, decode, resize, and normalize to [-1,1] (MobileNetV2)."""
     img = tf.io.read_file(path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, [IMG_HEIGHT, IMG_WIDTH])
-    img = img / 255.0   # rescale to [0,1]
+    img = preprocess_input(img)
     return img, label
 
 train_dataset = tf.data.Dataset.from_tensor_slices((train_paths, train_labels))
@@ -169,3 +171,37 @@ fig_cm.tight_layout()
 fig_cm.savefig('outputs/evaluation/confusion_matrices/confusion_matrix_cnn_tl.png', dpi=150)
 print("Confusion matrix saved as 'confusion_matrix_cnn_tl.png'")
 plt.close(fig_cm)
+
+# Extra metrics (imbalanced data): balanced acc, MCC, ROC-AUC, PR-AUC
+print("\nExtra metrics (CNN / MobileNetV2):")
+print("balanced acc:", balanced_accuracy_score(y_true, y_pred))
+print("MCC:", matthews_corrcoef(y_true, y_pred))
+print("ROC-AUC:", roc_auc_score(y_true, y_pred_prob))
+print("PR-AUC:", average_precision_score(y_true, y_pred_prob))
+
+# ROC curve
+fpr, tpr, _ = roc_curve(y_true, y_pred_prob)
+fig_roc, ax_roc = plt.subplots(figsize=(6, 5))
+ax_roc.plot(fpr, tpr, label=f'CNN (AUC={auc(fpr, tpr):.4f})')
+ax_roc.plot([0, 1], [0, 1], linestyle='--', label='Chance')
+ax_roc.set_xlabel('False Positive Rate')
+ax_roc.set_ylabel('True Positive Rate')
+ax_roc.set_title('ROC Curve - CNN (MobileNetV2)')
+ax_roc.legend()
+fig_roc.tight_layout()
+fig_roc.savefig('outputs/evaluation/roc_curves/roc_curve_cnn.png', dpi=150)
+print("ROC curve saved as 'roc_curve_cnn.png'")
+plt.close(fig_roc)
+
+# PR curve
+precision, recall, _ = precision_recall_curve(y_true, y_pred_prob)
+fig_pr, ax_pr = plt.subplots(figsize=(6, 5))
+ax_pr.plot(recall, precision, label=f'CNN (AP={average_precision_score(y_true, y_pred_prob):.4f})')
+ax_pr.set_xlabel('Recall')
+ax_pr.set_ylabel('Precision')
+ax_pr.set_title('PR Curve - CNN (MobileNetV2)')
+ax_pr.legend()
+fig_pr.tight_layout()
+fig_pr.savefig('outputs/evaluation/roc_curves/pr_curve_cnn.png', dpi=150)
+print("PR curve saved as 'pr_curve_cnn.png'")
+plt.close(fig_pr)

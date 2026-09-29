@@ -39,7 +39,7 @@ from transformers import TFViTModel
 SCRIPT_DIR   = Path(__file__).parent.resolve()
 CNN_MODEL    = SCRIPT_DIR / "saved_models" / "cnn_tl_skin_cancer.keras"
 VIT_WEIGHTS  = SCRIPT_DIR / "saved_models" / "vit_model_hf.h5"
-CNN_SIZE = (128, 128)   # (H, W)
+CNN_SIZE = (224, 224)   # (H, W)
 VIT_SIZE = (224, 224)   # (H, W)
 DIAGNOSIS_DIR = SCRIPT_DIR / "diagnosis"
 LABELS = {0: "Benign (Καλοήθης)", 1: "Malignant (Κακοήθης)"}
@@ -81,12 +81,13 @@ def build_vit_model():
 
 
 def load_image_for_model(image_path: str, size: tuple) -> np.ndarray:
+    # ViT path: normalize to [-1,1] (mean=0.5 std=0.5), must match vit_model_hf.py training.
     img_raw     = tf.io.read_file(image_path)
 
     # decode_image handles JPEG/PNG/GIF/BMP automatically
     img_decoded = tf.image.decode_image(img_raw, channels=3, expand_animations=False)
     img_resized = tf.image.resize(img_decoded, list(size))
-    img_scaled  = img_resized.numpy() / 255.0
+    img_scaled  = img_resized.numpy() / 127.5 - 1.0
     return np.expand_dims(img_scaled.astype(np.float32), axis=0)   # (1, H, W, 3)
 
 

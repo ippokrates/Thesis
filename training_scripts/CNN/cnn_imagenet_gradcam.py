@@ -3,6 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import cv2
 import os
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
 model = tf.keras.models.load_model('saved_models/cnn_tl_skin_cancer.keras')
 
@@ -40,16 +41,16 @@ if not os.path.exists(IMAGE_PATH):
 
 img = tf.io.read_file(IMAGE_PATH)
 img = tf.image.decode_jpeg(img, channels=3)
-img = tf.image.resize(img, [128, 128])
-img_array_scaled = np.expand_dims(img.numpy() / 255.0, axis=0)
+img = tf.image.resize(img, [224, 224])
+img_array_scaled = np.expand_dims(preprocess_input(img.numpy()), axis=0)  # [-1,1], must match training
 
 prediction = model.predict(img_array_scaled)[0][0]
 heatmap = make_gradcam_heatmap(img_array_scaled, model, last_conv_layer_name)
 
 original_img = cv2.imread(IMAGE_PATH)
-original_img = cv2.resize(original_img, (128, 128))
+original_img = cv2.resize(original_img, (224, 224))
 
-heatmap_resized = cv2.resize(heatmap, (128, 128))
+heatmap_resized = cv2.resize(heatmap, (224, 224))
 heatmap_resized = np.uint8(255 * heatmap_resized)
 heatmap_color = cv2.applyColorMap(heatmap_resized, cv2.COLORMAP_JET)
 
@@ -67,6 +68,6 @@ plt.imshow(cv2.cvtColor(superimposed_img, cv2.COLOR_BGR2RGB))
 plt.title("Grad-CAM")
 plt.axis('off')
 plt.tight_layout()
-plt.savefig('media/attention_rollout/FN/gradcam_cnn_malignant_ISIC_0030616.png', dpi=150, bbox_inches='tight')
+plt.savefig('TEST___gradcam_cnn_malignant_ISIC_0030616.png', dpi=150, bbox_inches='tight')
 
 print("Saved gradcam")
