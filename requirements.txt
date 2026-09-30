@@ -4,7 +4,6 @@ numpy==2.5.1
 pandas==3.0.3
 scikit_learn==1.9.0
 tensorflow==2.21.0
-tensorflow_hub==0.16.1
 transformers==4.57.6
 shap==0.52.0
 lime==0.2.0.1
