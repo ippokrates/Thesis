@@ -137,6 +137,8 @@ def parse_args():
     parser.add_argument("--vit_weights", default=str(VIT_WEIGHTS),help=f"ViT weights (.h5)  default: {VIT_WEIGHTS}")
     parser.add_argument("--alpha",       type=float, default=0.4, help="Διαφάνεια XAI overlay (0-1, default: 0.4)")
     parser.add_argument("--dpi",         type=int,   default=150, help="DPI εξόδου (default: 150)")
+    parser.add_argument("--json",        action="store_true",
+                        help="Εκτύπωση αποτελεσμάτων ως JSON (για προγραμματιστική χρήση)")
     return parser.parse_args()
 
 
@@ -308,6 +310,16 @@ def main():
         output_path = out_path,
         dpi         = args.dpi,
     )
+
+    # Machine-readable output. Printed as the LAST line so callers can take
+    # splitlines()[-1] (TensorFlow may emit warnings on stdout before this).
+    if args.json:
+        print(json.dumps({
+            "cnn_prob":    cnn_prob,
+            "vit_prob":    vit_prob,
+            "output_path": out_path,
+        }))
+        return
 
     print("\n" + "-" * 60)
     print("  ΑΠΟΤΕΛΕΣΜΑΤΑ ")
