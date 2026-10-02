@@ -24,7 +24,6 @@ df = df.dropna()
 
 # target variable
 # 0 healthy / 1 heart desease
-#df['target'] = df['target'].apply(lambda x: 1 if x > 0 else 0)
 df['target'] = df['target'].apply(lambda x: 0 if x > 0 else 1)
 
 
