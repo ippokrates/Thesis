@@ -63,15 +63,16 @@ def load_cardiology_resources():
     return rf, dnn, X_train, scaler
 
 
-@st.cache_resource(show_spinner="Προετοιμασία LIME / Preparing LIME explainer…")
-def load_lime_explainer(_X_train: pd.DataFrame):
+def build_lime_explainer(X_train: pd.DataFrame):
     """
-    Build and cache the LIME TabularExplainer.
-    Underscore prefix on _X_train tells Streamlit to skip hashing the DataFrame.
-    The same explainer object is reused for both RF and DNN.
+    Build a fresh LIME TabularExplainer on every call.
+    Must NOT be cached: the explainer holds a stateful random generator that
+    advances on each explain_instance call, so a cached object yields
+    different explanations for identical inputs across clicks.
+    The same explainer object is reused for both RF and DNN within one run.
     """
     return lime.lime_tabular.LimeTabularExplainer(
-        training_data=_X_train.values,
+        training_data=X_train.values,
         feature_names=FEATURE_NAMES_EN,
         class_names=["Healthy / Υγιής", "Heart Disease / Καρδιοπάθεια"],
         mode="classification",
@@ -194,7 +195,6 @@ def render_cardiology_tab() -> None:
 
     # Load resources (cached after first call)
     rf_model, dnn_model, X_train, scaler = load_cardiology_resources()
-    lime_explainer = load_lime_explainer(X_train)
 
     # Input form
     st.subheader("Κλινικά Δεδομένα Ασθενή / Patient Clinical Data")
@@ -277,6 +277,10 @@ def render_cardiology_tab() -> None:
     dnn_prob = float(dnn_model.predict(X_scaled, verbose=0)[0, 0])
 
     st.toast("Η εκτίμηση ολοκληρώθηκε - δείτε παρακάτω / Assessment complete - see below")
+
+    # Fresh explainer per run: a cached object would keep spending its random
+    # generator across clicks and shift the bars for identical inputs.
+    lime_explainer = build_lime_explainer(X_train)
 
     st.divider()
     st.subheader("Αποτελέσματα Πρόβλεψης / Prediction Results")
