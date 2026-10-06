@@ -148,7 +148,6 @@ def compute_dnn_shap(dnn_model, X_train: pd.DataFrame, X_scaled: np.ndarray):
 
 
 def make_waterfall_fig(sv: np.ndarray, bv: float, raw_row: np.ndarray) -> plt.Figure:
-    """Build a SHAP waterfall matplotlib Figure."""
     explanation = shap.Explanation(
         values      = sv,
         base_values = bv,
@@ -184,14 +183,6 @@ def make_lime_fig(
 
 def render_cardiology_tab() -> None:
     st.header("Καρδιολογική Εκτίμηση Κινδύνου / Cardiology Risk Assessment")
-    # st.markdown(
-    #     "Εισάγετε τα κλινικά δεδομένα του ασθενή (Cleveland Heart Disease Dataset). "
-    #     "Το σύστημα εκτιμά τον κίνδυνο καρδιοπάθειας με **Random Forest** και **DNN**, "
-    #     "και παράγει επεξηγήσεις με **SHAP** και **LIME**.\n\n"
-    #     "*Enter patient clinical data. The system estimates heart disease risk with RF and DNN, "
-    #     "and explains decisions using SHAP and LIME.*"
-    # )
-    # st.divider()
 
     # Load resources (cached after first call)
     rf_model, dnn_model, X_train, scaler = load_cardiology_resources()

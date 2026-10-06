@@ -69,14 +69,6 @@ def run_diagnose(image_path: str, alpha: float) -> dict:
 
 def render_dermatology_tab() -> None:
     st.header("Ανάλυση Δερματικής Βλάβης / Skin Lesion Analysis")
-    # st.markdown(
-    #     "Ανεβάστε μία εικόνα δερματικής βλάβης. Το σύστημα εκτελεί πρόβλεψη με "
-    #     "**CNN (MobileNetV2)** και **ViT-B/16** και παράγει XAI επεξηγήσεις με "
-    #     "**Grad-CAM** και **Attention Rollout**.\n\n"
-    #     "*Upload a skin lesion image. The system predicts with CNN and ViT and generates "
-    #     "XAI explanations via Grad-CAM and Attention Rollout.*"
-    # )
-    #st.divider()
 
     # Upload & settings
     col_up, col_cfg = st.columns([3, 1])
@@ -160,16 +152,6 @@ def render_dermatology_tab() -> None:
             with st.expander("Λεπτομέρειες / Details"):
                 st.code(run_stdout)
 
-    # ── XAI note ─────────────────────────────────────────────────────────────
-    # with st.expander("ℹΕπεξήγηση μεθόδων XAI / About XAI methods"):
-    #     st.markdown(
-    #         "**Grad-CAM** (CNN): Χρησιμοποιεί τις κλίσεις του τελευταίου convolutional layer "
-    #         "για να αναδείξει τις περιοχές που επηρέασαν την πρόβλεψη.\n\n"
-    #         "*Uses gradients of the last convolutional layer to highlight regions influencing the prediction.*\n\n"
-    #         "**Attention Rollout** (ViT): Διαδίδει τα attention weights σε όλα τα 12 transformer layers "
-    #         "για να παραχθεί ένας χάρτης εστίασης.\n\n"
-    #         "*Propagates attention weights across all 12 transformer layers to produce a focus map.*"
-    #     )
 
     if png_bytes:
         st.download_button(
