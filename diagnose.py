@@ -1,7 +1,7 @@
 """
 diagnose.py
 Δέχεται μία εικόνα δέρματος οποιουδήποτε μεγέθους και:
-  1. Κάνει πρόβλεψη με το CNN (MobileNetV2, 128×128) + Grad-CAM
+  1. Κάνει πρόβλεψη με το CNN (MobileNetV2, 224×224) + Grad-CAM
   2. Κάνει πρόβλεψη με το ViT-B/16 (HuggingFace, 224×224) + Attention Rollout
   3. Εκτυπώνει τις πιθανότητες στο τερματικό
   4. Αποθηκεύει ένα composite PNG με 3 sub-plots:
@@ -40,7 +40,6 @@ VIT_WEIGHTS  = SCRIPT_DIR / "saved_models" / "vit_model_hf.h5"
 CNN_SIZE = (224, 224)   # (H, W)
 VIT_SIZE = (224, 224)   # (H, W)
 DIAGNOSIS_DIR = SCRIPT_DIR / "diagnosis"
-LABELS = {0: "Benign (Καλοήθης)", 1: "Malignant (Κακοήθης)"}
 
 
 def load_image_bgr(image_path: str, size: tuple) -> np.ndarray:
