@@ -39,14 +39,13 @@ if str(THESIS_DIR) not in sys.path:
 from mappings import (
     sex_mapping, cp_mapping, fbs_mapping,
     restecg_mapping, exang_mapping, slope_mapping, thal_mapping,
+    FEATURE_LABELS_EN, FEATURE_LABELS_EL,
 )
 
 # Feature metadata
-FEATURE_NAMES_EN = [
-    "Age", "Sex", "Chest Pain Type", "Resting BP", "Cholesterol",
-    "Fasting Blood Sugar", "Resting ECG", "Max Heart Rate",
-    "Exercise Angina", "ST Depression", "ST Slope", "Major Vessels", "Thalassemia",
-]
+FEATURE_COLS = ["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg",
+                "thalach", "exang", "oldpeak", "slope", "ca", "thal"]
+FEATURE_NAMES_EN = [FEATURE_LABELS_EN[c] for c in FEATURE_COLS]
 
 
 # Cached resource loaders
@@ -195,20 +194,20 @@ def render_cardiology_tab() -> None:
 
         with c1:
             st.markdown("**Γενικά Στοιχεία & Παράγοντες Κινδύνου / General Info & Risk Factors**")
-            age  = st.number_input("Ηλικία / Age (έτη/years)", 20, 100, 55)
+            age  = st.number_input(f"{FEATURE_LABELS_EL['age']} / {FEATURE_LABELS_EN['age']} (έτη/years)", 20, 100, 55)
             sex  = st.selectbox(
-                "Φύλο / Sex",
+                f"{FEATURE_LABELS_EL['sex']} / {FEATURE_LABELS_EN['sex']}",
                 options=list(sex_mapping.keys()),
                 format_func=lambda k: sex_mapping[k],
             )
-            chol = st.number_input("Χοληστερόλη Ορού / Serum Cholesterol (mg/dl)", 100, 600, 250)
+            chol = st.number_input(f"{FEATURE_LABELS_EL['chol']} / {FEATURE_LABELS_EN['chol']}", 100, 600, 250)
             fbs  = st.selectbox(
-                "Σάκχαρο Νηστείας / Fasting Blood Sugar",
+                f"{FEATURE_LABELS_EL['fbs']} / {FEATURE_LABELS_EN['fbs']}",
                 options=list(fbs_mapping.keys()),
                 format_func=lambda k: fbs_mapping[k],
             )
             thal = st.selectbox(
-                "Θαλασσαιμία / Thalassemia",
+                f"{FEATURE_LABELS_EL['thal']} / {FEATURE_LABELS_EN['thal']}",
                 options=list(thal_mapping.keys()),
                 format_func=lambda k: thal_mapping[k],
             )
@@ -216,14 +215,14 @@ def render_cardiology_tab() -> None:
         with c2:
             st.markdown("**Κλινική Εξέταση & Συμπτώματα / Clinical Examination & Symptoms**")
             cp       = st.selectbox(
-                "Τύπος Θωρακικού Άλγους / Chest Pain Type",
+                f"{FEATURE_LABELS_EL['cp']} / {FEATURE_LABELS_EN['cp']}",
                 options=list(cp_mapping.keys()),
                 format_func=lambda k: cp_mapping[k],
             )
-            trestbps = st.number_input("Αρτηριακή Πίεση Ηρεμίας / Resting BP (mm Hg)", 80, 220, 130)
-            thalach  = st.number_input("Μέγιστη Καρδιακή Συχνότητα / Max Heart Rate (bpm)", 60, 220, 150)
+            trestbps = st.number_input(f"{FEATURE_LABELS_EL['trestbps']} / {FEATURE_LABELS_EN['trestbps']}", 80, 220, 130)
+            thalach  = st.number_input(f"{FEATURE_LABELS_EL['thalach']} / {FEATURE_LABELS_EN['thalach']} (bpm)", 60, 220, 150)
             exang    = st.selectbox(
-                "Στηθάγχη Άσκησης / Exercise Induced Angina",
+                f"{FEATURE_LABELS_EL['exang']} / {FEATURE_LABELS_EN['exang']}",
                 options=list(exang_mapping.keys()),
                 format_func=lambda k: exang_mapping[k],
             )
@@ -231,20 +230,20 @@ def render_cardiology_tab() -> None:
         with c3:
             st.markdown("**Ηλεκτροκαρδιογραφικά Ευρήματα / ECG & Angiography Findings**")
             restecg = st.selectbox(
-                "ΗΚΓ Ηρεμίας / Resting ECG",
+                f"{FEATURE_LABELS_EL['restecg']} / {FEATURE_LABELS_EN['restecg']}",
                 options=list(restecg_mapping.keys()),
                 format_func=lambda k: restecg_mapping[k],
             )
             oldpeak = st.number_input(
-                "ST Κατάσπαση / ST Depression (oldpeak)", 0.0, 6.2, 1.0, step=0.1,
+                f"{FEATURE_LABELS_EL['oldpeak']} / {FEATURE_LABELS_EN['oldpeak']}", 0.0, 6.2, 1.0, step=0.1,
             )
             slope   = st.selectbox(
-                "Κλίση ST / Slope of ST Segment",
+                f"{FEATURE_LABELS_EL['slope']} / {FEATURE_LABELS_EN['slope']}",
                 options=list(slope_mapping.keys()),
                 format_func=lambda k: slope_mapping[k],
             )
             ca      = st.selectbox(
-                "Κύρια Αγγεία (φθοριοσκοπία) / Major Vessels (fluoroscopy)",
+                f"{FEATURE_LABELS_EL['ca']} / {FEATURE_LABELS_EN['ca']} (φθοριοσκοπία/fluoroscopy)",
                 options=[0, 1, 2, 3],
             )
 
