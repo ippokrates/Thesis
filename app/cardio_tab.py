@@ -1,5 +1,5 @@
 """
-app/cardio_tab.py — Cardiology tab
+app/cardio_tab.py - Cardiology tab
 ===================================
 Heart disease risk assessment: takes the 13 clinical features, predicts with
 Random Forest and DNN, and explains each prediction with SHAP waterfall plots
@@ -24,8 +24,9 @@ import shap
 import lime
 import lime.lime_tabular
 
+from shared import THESIS_DIR, model_consensus, render_prob_metrics
 
-THESIS_DIR    = Path(__file__).parent.parent.resolve()
+
 RF_MODEL_PATH = THESIS_DIR / "saved_models" / "rf_model.pkl"
 DNN_MODEL_PATH= THESIS_DIR / "saved_models" / "dnn_model.keras"
 X_TRAIN_PATH  = THESIS_DIR / "data" / "HDD" / "X_train_ready.csv"
@@ -50,10 +51,10 @@ FEATURE_NAMES_EN = [
 
 # Cached resource loaders
 
-@st.cache_resource(show_spinner="Φόρτωση μοντέλων Καρδιολογίας / Loading cardiology models…")
+@st.cache_resource(show_spinner="Φόρτωση μοντέλων / Loading models…")
 def load_cardiology_resources():
     """Load RF, DNN, training data, and scaler once per session."""
-    import tensorflow as tf  # local import — avoids loading TF for derm-only sessions
+    import tensorflow as tf  # local import avoids loading TF for derm-only sessions
 
     rf     = joblib.load(str(RF_MODEL_PATH))
     dnn    = tf.keras.models.load_model(str(DNN_MODEL_PATH))
@@ -180,18 +181,6 @@ def make_lime_fig(
     return fig
 
 
-def cardio_consensus(rf_prob: float, dnn_prob: float) -> None:
-    agree = (rf_prob > 0.5) == (dnn_prob > 0.5)
-    if agree:
-        label = "Καρδιοπάθεια / Heart Disease" if rf_prob > 0.5 else "Υγιής / Healthy"
-        st.success(f"**Σύγκλιση / Consensus** — RF & DNN συμφωνούν: **{label}**")
-    else:
-        st.warning(
-            "**Διαφωνία / Disagreement** — RF & DNN διαφωνούν.\n\n"
-            "Συνιστάται κλινικός έλεγχος / Clinical review recommended."
-        )
-
-
 def render_cardiology_tab() -> None:
     st.header("Καρδιολογική Εκτίμηση Κινδύνου / Cardiology Risk Assessment")
     # st.markdown(
@@ -290,36 +279,23 @@ def render_cardiology_tab() -> None:
     st.divider()
     st.subheader("Αποτελέσματα Πρόβλεψης / Prediction Results")
 
-    pm1, pm2, pm3 = st.columns(3)
-    with pm1:
-        st.metric(
-            label="Random Forest",
-            value="🔴 Καρδιοπάθεια / Heart Disease" if rf_prob > 0.5 else "🟢 Υγιής / Healthy",
-            delta=f"P(disease) = {rf_prob * 100:.1f}%",
-        )
-    with pm2:
-        st.metric(
-            label="Deep Neural Network",
-            value="🔴 Καρδιοπάθεια / Heart Disease" if dnn_prob > 0.5 else "🟢 Υγιής / Healthy",
-            delta=f"P(disease) = {dnn_prob * 100:.1f}%",
-        )
-    with pm3:
-        avg = (rf_prob + dnn_prob) / 2.0
-        st.metric(
-            label="Ensemble — Μέσος Όρος / Average",
-            value="🔴 Καρδιοπάθεια / Heart Disease" if avg > 0.5 else "🟢 Υγιής / Healthy",
-            delta=f"P(disease) = {avg * 100:.1f}%",
-        )
+    avg = (rf_prob + dnn_prob) / 2.0
+    render_prob_metrics([
+        ("Random Forest", rf_prob, "Καρδιοπάθεια / Heart Disease", "Υγιής / Healthy", "P(disease)"),
+        ("Deep Neural Network", dnn_prob, "Καρδιοπάθεια / Heart Disease", "Υγιής / Healthy", "P(disease)"),
+        ("Ensemble - Μέσος Όρος / Average", avg, "Καρδιοπάθεια / Heart Disease", "Υγιής / Healthy", "P(disease)"),
+    ])
 
-    cardio_consensus(rf_prob, dnn_prob)
+    model_consensus(rf_prob, dnn_prob, "RF", "DNN",
+                    "Καρδιοπάθεια / Heart Disease", "Υγιής / Healthy")
 
     # SHAP
     st.divider()
-    st.subheader("SHAP — Waterfall Plots")
+    st.subheader("SHAP - Waterfall Plots")
     st.caption(
         "Κάθε μπάρα δείχνει πόσο κάθε χαρακτηριστικό ωθεί την πρόβλεψη "
-        "προς Καρδιοπάθεια (+) ή Υγιής (−). "
-        "/ Each bar shows how much each feature pushes the prediction toward Heart Disease (+) or Healthy (−)."
+        "προς Καρδιοπάθεια (+) ή Υγιής (−). \n"
+        "Each bar shows how much each feature pushes the prediction toward Heart Disease (+) or Healthy (−)."
     )
 
     shap_c1, shap_c2 = st.columns(2)
@@ -340,21 +316,14 @@ def render_cardiology_tab() -> None:
             st.pyplot(fig_dnn_shap, width='stretch')
             plt.close(fig_dnn_shap)
 
-    # with st.expander("ℹ️ Επεξήγηση SHAP / About SHAP"):
-    #     st.markdown(
-    #         "**SHAP** (SHapley Additive exPlanations): Μοιράζει τη διαφορά μεταξύ της πρόβλεψης "
-    #         "και της μέσης πρόβλεψης σε όλα τα χαρακτηριστικά, βάσει θεωρίας παιγνίων.\n\n"
-    #         "*Distributes the difference between the prediction and the average prediction "
-    #         "across all features, based on game theory (Shapley values).*"
-    #     )
 
     # LIME
     st.divider()
-    st.subheader("LIME — Local Explanations")
+    st.subheader("LIME - Local Explanations")
     st.caption(
-        "Το LIME προσαρμόζει ένα τοπικό γραμμικό μοντέλο γύρω από τον συγκεκριμένο ασθενή "
-        "για να εξηγήσει αυτή την πρόβλεψη. "
-        "/ LIME fits a local linear model around this specific patient to explain the prediction."
+        "Κάθε μπάρα δείχνει πόσο χαρακτηριστικό ωθεί την πρόβλεψη προς Καρδιοπάθεια (πράσινο) ή Υγιής (κόκκινο)."
+        "\n"
+        "Each bar shows how much each feature pushes the prediction towards Heart Disease (green) or Healthy (red)."
     )
 
     def rf_predict_fn(data):
@@ -371,7 +340,7 @@ def render_cardiology_tab() -> None:
         with st.spinner("Υπολογισμός RF LIME… / Computing RF LIME…"):
             fig_rf_lime = make_lime_fig(
                 lime_explainer, rf_predict_fn,
-                X_scaled[0], "Random Forest — LIME",
+                X_scaled[0], "Random Forest - LIME",
             )
             st.pyplot(fig_rf_lime, width='stretch')
             plt.close(fig_rf_lime)
@@ -381,15 +350,8 @@ def render_cardiology_tab() -> None:
         with st.spinner("Υπολογισμός DNN LIME… / Computing DNN LIME…"):
             fig_dnn_lime = make_lime_fig(
                 lime_explainer, dnn_predict_fn,
-                X_scaled[0], "DNN — LIME",
+                X_scaled[0], "DNN - LIME",
             )
             st.pyplot(fig_dnn_lime, width='stretch')
             plt.close(fig_dnn_lime)
 
-    # with st.expander("Επεξήγηση LIME / About LIME"):
-    #     st.markdown(
-    #         "**LIME** (Local Interpretable Model-Agnostic Explanations): Δημιουργεί τεχνητά δείγματα "
-    #         "γύρω από τον ασθενή, τα ταξινομεί, και προσαρμόζει ένα απλό γραμμικό μοντέλο.\n\n"
-    #         "*Creates artificial samples around the patient, classifies them, and fits a simple "
-    #         "linear model to approximate local decision boundaries.*"
-    #     )

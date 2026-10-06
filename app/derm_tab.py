@@ -18,8 +18,9 @@ from pathlib import Path
 
 import streamlit as st
 
+from shared import THESIS_DIR, model_consensus, render_prob_metrics
 
-THESIS_DIR    = Path(__file__).parent.parent.resolve()
+
 DIAGNOSE_PY   = THESIS_DIR / "diagnose.py"
 
 
@@ -64,19 +65,6 @@ def run_diagnose(image_path: str, alpha: float) -> dict:
         "output_png": data["output_path"],
         "stdout":     stdout,
     }
-
-
-def derm_consensus(cnn_prob: float, vit_prob: float) -> None:
-    """Green (agree) / Orange (disagree) consensus badge for skin lesion tab."""
-    agree = (cnn_prob > 0.5) == (vit_prob > 0.5)
-    if agree:
-        label = "Κακοήθης / Malignant" if cnn_prob > 0.5 else "Καλοήθης / Benign"
-        st.success(f"**Σύγκλιση / Consensus** — CNN & ViT συμφωνούν: **{label}**")
-    else:
-        st.warning(
-            "**Διαφωνία / Disagreement** — CNN & ViT διαφωνούν.\n\n"
-            "Συνιστάται κλινικός έλεγχος / Clinical review recommended."
-        )
 
 
 def render_dermatology_tab() -> None:
@@ -151,28 +139,15 @@ def render_dermatology_tab() -> None:
         st.divider()
         st.subheader("Πιθανότητες / Probabilities")
 
-        mc1, mc2, mc3 = st.columns(3)
-        with mc1:
-            st.metric(
-                label="CNN — MobileNetV2",
-                value="🔴 Κακοήθης / Malignant" if cnn_prob > 0.5 else "🟢 Καλοήθης / Benign",
-                delta=f"P(malignant) = {cnn_prob * 100:.1f}%",
-            )
-        with mc2:
-            st.metric(
-                label="ViT — ViT-B/16",
-                value="🔴 Κακοήθης / Malignant" if vit_prob > 0.5 else "🟢 Καλοήθης / Benign",
-                delta=f"P(malignant) = {vit_prob * 100:.1f}%",
-            )
-        with mc3:
-            avg = (cnn_prob + vit_prob) / 2.0
-            st.metric(
-                label="Ensemble — Μέσος Όρος / Average",
-                value="🔴 Κακοήθης / Malignant" if avg > 0.5 else "🟢 Καλοήθης / Benign",
-                delta=f"P(malignant) = {avg * 100:.1f}%",
-            )
+        avg = (cnn_prob + vit_prob) / 2.0
+        render_prob_metrics([
+            ("CNN — MobileNetV2", cnn_prob, "Κακοήθης / Malignant", "Καλοήθης / Benign", "P(malignant)"),
+            ("ViT — ViT-B/16", vit_prob, "Κακοήθης / Malignant", "Καλοήθης / Benign", "P(malignant)"),
+            ("Ensemble — Μέσος Όρος / Average", avg, "Κακοήθης / Malignant", "Καλοήθης / Benign", "P(malignant)"),
+        ])
 
-        derm_consensus(cnn_prob, vit_prob)
+        model_consensus(cnn_prob, vit_prob, "CNN", "ViT",
+                        "Κακοήθης / Malignant", "Καλοήθης / Benign")
 
     if png_bytes:
         st.divider()
