@@ -276,6 +276,8 @@ def render_cardiology_tab() -> None:
     rf_prob  = float(rf_model.predict_proba(X_scaled)[0, 1])
     dnn_prob = float(dnn_model.predict(X_scaled, verbose=0)[0, 0])
 
+    st.toast("Η εκτίμηση ολοκληρώθηκε - δείτε παρακάτω / Assessment complete - see below")
+
     st.divider()
     st.subheader("Αποτελέσματα Πρόβλεψης / Prediction Results")
 

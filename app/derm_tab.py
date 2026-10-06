@@ -121,6 +121,7 @@ def render_dermatology_tab() -> None:
         ):
             try:
                 result = run_diagnose(img_path, alpha)
+                st.toast("Η ανάλυση ολοκληρώθηκε - δείτε παρακάτω / Analysis complete - see below")
             except RuntimeError as err:
                 st.error(f"Σφάλμα / Error:\n```\n{err}\n```")
                 return
