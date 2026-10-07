@@ -5,6 +5,11 @@ import joblib
 import lime
 import lime.lime_tabular
 import os
+import sys
+from pathlib import Path
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+from mappings import FEATURE_LABELS_EN as feature_mapping
 
 OUT_DIR = "outputs/xai/tabular/lime/"
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -15,21 +20,6 @@ X_train = pd.read_csv("data/HDD/X_train_ready.csv")
 X_test = pd.read_csv("data/HDD/X_test_ready.csv")
 y_test = pd.read_csv("data/HDD/y_test_ready.csv").values.ravel()
 
-feature_mapping = {
-    'age': 'Age',
-    'sex': 'Sex',
-    'cp': 'Chest Pain Type',
-    'trestbps': 'Resting Blood Pressure',
-    'chol': 'Serum Cholesterol',
-    'fbs': 'Fasting Blood Sugar > 120 mg/dl',
-    'restecg': 'Resting ECG Results',
-    'thalach': 'Max Heart Rate Achieved',
-    'exang': 'Exercise Induced Angina',
-    'oldpeak': 'ST Depression (Oldpeak)',
-    'slope': 'Slope of ST Segment',
-    'ca': 'Number of Major Vessels (0-3)',
-    'thal': 'Thalassemia'
-}
 readable_feature_names = [feature_mapping.get(col, col) for col in X_train.columns]
 
 dnn_model = load_model("saved_models/dnn_model.keras")
@@ -48,14 +38,16 @@ dnn_explainer = lime.lime_tabular.LimeTabularExplainer(
     training_data=X_train.values,
     feature_names=readable_feature_names,
     class_names=['Healthy', 'Heart Disease'],
-    mode='classification'
+    mode='classification',
+    random_state=42
 )
 
 rf_explainer = lime.lime_tabular.LimeTabularExplainer(
     training_data=X_train.values,
     feature_names=readable_feature_names,
     class_names=['Healthy', 'Heart Disease'],
-    mode='classification'
+    mode='classification',
+    random_state=42
 )
 
 # Find one healthy and one sick patient
