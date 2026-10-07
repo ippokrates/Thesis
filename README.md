@@ -1,87 +1,90 @@
 # Ανάπτυξη Εργαλείου XAI για Ερμηνεία Αποφάσεων σε Συστήματα Υγείας
 
-Η εργασία εστιαζει σε δυο πεδια:
-1. Καρδιολογια: Προβλεψη πιθανοτητας καρδιοπαθειας απο κλινικα δεδομενα με χρηση Random Forest και Deep Neural Network (DNN), καθως και επεξηγηση αποφασεων με SHAP και LIME.
-2. Δερματολογια: Ταξινομηση δερματικων αλλοιωσεων (καλοηθεις / κακοηθεις) απο εικονες με χρηση Convolutional Neural Network (CNN / MobileNetV2) και Vision Transformer (ViT-B/16), καθως και οπτικη ερμηνεια με Grad-CAM και Attention Rollout.
+Η εργασία εστιάζει σε δύο πεδία:
+1. Καρδιολογία: Πρόβλεψη πιθανότητας καρδιοπάθειας από κλινικά δεδομένα με χρήση Random Forest και Deep Neural Network (DNN), καθώς και επεξήγηση αποφάσεων με SHAP και LIME.
+2. Δερματολογία: Ταξινόμηση δερματικών αλλοιώσεων (καλοήθεις / κακοήθεις) από εικόνες με χρήση Convolutional Neural Network (CNN / MobileNetV2) και Vision Transformer (ViT-B/16), καθώς και οπτική ερμηνεία με Grad-CAM και Attention Rollout.
 
-Ολα τα αποτελεσματα ενσωματωνονται σε μια διαδραστικη εφαρμογη (Streamlit) καθως και σε αυτονομο εργαλειο γραμμης εντολων (CLI).
+Όλα τα αποτελέσματα ενσωματώνονται σε μια διαδραστική εφαρμογή (Streamlit) καθώς και σε αυτόνομο εργαλείο γραμμής εντολών (CLI).
 
 ---
 
-## Δομη
+## Δομή
 
 ```text
 Thesis/
 │
 ├── app/
-│   └── app.py                        # Εφαρμογη Streamlit
+│   ├── app.py                        # Streamlit interface
+│   ├── derm_tab.py                   # Tab Δερματολογίας
+│   ├── cardio_tab.py                 # Tab Καρδιολογίας
+│   └── shared.py                     # Κοινός κώδικας
 │
 ├── data/
 │   ├── HDD/                          # Cleveland Heart Disease Dataset
-│   │   ├── heart.csv                 # Αρχικο dataset
-│   │   ├── data_preprocessing.py     # Script καθαρισμου και προεπεξεργασιας
-│   │   ├── scaler.pkl                # Αποθηκευμενο StandardScaler object
-│   │   ├── X_train_ready.csv         # Προεπεξεργασμενα δεδομενα εκπαιδευσης
-│   │   ├── X_test_ready.csv          # Προεπεξεργασμενα δεδομενα ελεγχου
+│   │   ├── heart.csv                 # Αρχικό dataset
+│   │   ├── data_preprocessing.py     # Script καθαρισμού και προεπεξεργασίας
+│   │   ├── scaler.pkl                # Αποθηκευμένο StandardScaler object
+│   │   ├── X_train_ready.csv         # Προεπεξεργασμένα δεδομένα εκπαίδευσης
+│   │   ├── X_test_ready.csv          # Προεπεξεργασμένα δεδομένα ελέγχου
 │   │   ├── y_train_ready.csv
 │   │   └── y_test_ready.csv
 │   │
 │   └── HAM10000/                     # HAM10000 Dataset
-│       ├── HAM10000_metadata.csv     # Μεταδεδομενα ασθενων και διαγνωσεων
-│       ├── image_sort.py             # Script ταξινομησης εικονων σε κλασεις
-│       └── skin_cancer_data/         # Φακελοι εικονων (benign / malignant)
+│       ├── HAM10000_metadata.csv     # Μεταδεδομένα ασθενών και διαγνώσεων
+│       ├── image_sort.py             # Script ταξινόμησης εικόνων σε κλάσεις
+│       └── skin_cancer_data/         # Φάκελοι εικόνων (benign / malignant)
 │
-├── saved_models/                     # Αποθηκευμενα εκπαιδευμενα μοντελα
-│   ├── rf_model.pkl                  # Random Forest μοντελο
-│   ├── dnn_model.keras               # Deep Neural Network (.keras)
-│   ├── cnn_tl_skin_cancer.keras      # CNN MobileNetV2 (.keras)
-│   └── vit_model_hf.h5               # Βάρη Vision Transformer
+├── saved_models/                     # Αποθηκευμένα εκπαιδευμένα μοντέλα
+│   ├── rf_model.pkl                  # Random Forest μοντέλο
+│   ├── dnn_model.keras               # Deep Neural Network
+│   ├── cnn_tl_skin_cancer.keras      # CNN 
+│   └── vit_model_hf.h5               # Vision Transformer
 │
-├── diagnosis/                        # Φακελος αποθηκευσης διαγνωσεων
+├── diagnosis/                        # Φάκελος αποθήκευσης διαγνώσεων
 │
-├── training_scripts/                 # Scripts εκπαιδευσης και αναλυσης
+├── training_scripts/                 # Scripts εκπαίδευσης και ανάλυσης
 │   ├── Random Forest/
-│   │   └── rf_model.py               # Εκπαιδευση Random Forest
+│   │   └── rf_model.py               # Εκπαίδευση Random Forest
 │   ├── DNN/
-│   │   └── dnn.py                    # Εκπαιδευση DNN
+│   │   └── dnn.py                    # Εκπαίδευση DNN
 │   ├── CNN/
-│   │   ├── cnn_imagenet.py           # Εκπαιδευση CNN
-│   │   └── cnn_imagenet_gradcam.py   # Παραγωγη Grad-CAM
+│   │   ├── cnn_imagenet.py           # Εκπαίδευση CNN
+│   │   └── cnn_imagenet_gradcam.py   # Παραγωγή Grad-CAM
 │   ├── ViT/
-│   │   ├── vit_model_hf.py           # Εκπαιδευση Vision Transformer
-│   │   └── vit_attention_rollout_hf.py.py # Παραγωγη Attention Rollout
-│   ├── compare_shap.py               # Συγκριτικη αναλυση SHAP (RF vs DNN)
-│   ├── compare_lime.py               # Συγκριτικη αναλυση LIME (RF vs DNN)
-│   ├── shap_analysis.py              # Beeswarm και summary διαγραμματα SHAP
-│   └── shap_waterfall.py             # Waterfall διαγραμματα ανα ασθενη
+│   │   ├── vit_model_hf.py           # Εκπαίδευση Vision Transformer
+│   │   └── vit_attention_rollout_hf.py # Παραγωγή Attention Rollout
+│   ├── compare_shap.py               # Συγκριτική ανάλυση SHAP (RF vs DNN)
+│   ├── compare_lime.py               # Συγκριτική ανάλυση LIME (RF vs DNN)
+│   ├── shap_analysis.py              # Beeswarm και summary διαγράμματα SHAP
+│   └── shap_waterfall.py             # Waterfall διαγράμματα ανά ασθενή
 │
-├── outputs/                          # Παραγομενα αποτελεσματα και διαγραμματα
-│   ├── eda/                          # Διαγραμματα διερευνητικης αναλυσης
+├── outputs/                          # Αποτελέσματα και διαγράμματα
+│   ├── eda/                          # Διαγράμματα διερευνητικής ανάλυσης
 │   ├── evaluation/
-│   │   ├── training_curves/          # Καμπυλες loss/accuracy
-│   │   ├── confusion_matrices/       # Πινακες συγχυσης ολων των μοντελων
-│   │   └── roc_curves/               # Καμπυλες ROC
+│   │   ├── training_curves/          # Καμπύλες loss/accuracy
+│   │   ├── confusion_matrices/       # Πίνακες σύγχυσης
+│   │   └── roc_curves/               # Καμπύλες ROC/PR
 │   └── xai/
 │       ├── tabular/                  # SHAP waterfall/beeswarm και LIME plots
 │       └── vision/                   # Grad-CAM και Attention Rollout plots
 │
-├── diagnose.py                       # CLI εργαλειο συνθετης διαγνωσης
-├── cnn_worker.py                     # Subprocess worker για το CNN Grad-CAM
-├── mappings.py                       # Λεξικα κλινικων ορων στα ελληνικα
-├── requirements.txt                  # Λιστα Python dependencies
+├── diagnose.py                       # CLI εργαλείο διάγνωσης
+├── cnn_worker.py                     # Subprocess worker για το CNN - Grad-CAM
+├── mappings.py                       # Όροι και ετικέτες χαρακτηριστικών (ελληνικά/αγγλικά) 
+├── requirements.txt                  # Python dependencies
 └── README.md                       
 ```
 
 ---
 
-## Εγκατασταση
+## Εγκατάσταση
 
-1. Δημιουργια εικονικου περιβαλλοντος (venv):
+1. Δημιουργία εικονικού περιβάλλοντος (venv):
 ```bash
 python3 -m venv .venv
 ```
 
-2. Ενεργοποιηση του περιβαλλοντος:
+2. Ενεργοποίηση του περιβάλλοντος:
 - Σε Linux / WSL2 / macOS:
 ```bash
 source .venv/bin/activate
@@ -95,7 +98,7 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 ```
 
-3. Εγκατασταση των dependencies:
+3. Εγκατάσταση των dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -116,9 +119,9 @@ pip install -r requirements.txt
 
 ---
 
-## Οδηγιες Χρησης Εφαρμογης
+## Οδηγίες Χρήσης Εφαρμογής
 
-Η διαδραστικη εφαρμογη Streamlit εκκινειται με την εντολη:
+Η διαδραστική εφαρμογή Streamlit εκκινείται με την εντολή:
 
 ```bash
 streamlit run app/app.py
@@ -126,31 +129,31 @@ streamlit run app/app.py
 
 ---
 
-## Αυτονομη Διαγνωση απο Γραμμη Εντολων
+## Αυτόνομη Διάγνωση από Γραμμή Εντολών
 
-Μπορειτε να εκτελεσετε το διαγνωστικο script δερματολογιας απευθειας απο το τερματικο χωρις Streamlit:
+Μπορείτε να εκτελέσετε το διαγνωστικό script δερματολογίας απευθείας από το τερματικό χωρίς Streamlit:
 
 ```bash
 python diagnose.py --image διαδρομη/προς/εικονα.jpg
 ```
 
-Προαιρετικες παραμετροι:
-- `--alpha 0.5`: Ρυθμιση διαφανειας Grad-CAM overlay.
+Προαιρετικές παράμετροι:
+- `--alpha 0.5`: Ρύθμιση διαφάνειας Grad-CAM overlay.
 
-Η συνθετη εικονα αποτελεσματος αποθηκευεται αυτοματα με timestamp στον φακελο `diagnosis/`.
+Η σύνθετη εικόνα αποτελέσματος αποθηκεύεται αυτόματα με timestamp στον φάκελο `diagnosis/`.
 
 ---
 
-## Εκπαιδευση Μοντελων και Αναπαραγωγη Αποτελεσματων
+## Εκπαίδευση Μοντέλων και Αναπαραγωγή Αποτελεσμάτων
 
-Ολα τα scripts εκτελουνται απο τον κεντρικο φακελο του εργου (`Thesis/`):
+Όλα τα scripts εκτελούνται από τον κεντρικό φάκελο του έργου (`Thesis/`):
 
-1. Προεπεξεργασια Δεδομενων Heart Disease Dataset:
+1. Προεπεξεργασία Δεδομένων Heart Disease Dataset:
 ```bash
 python data/HDD/data_preprocessing.py
 ```
 
-2. Εκπαιδευση Μοντελων:
+2. Εκπαίδευση Μοντέλων:
 ```bash
 # Random Forest
 python "training_scripts/Random Forest/rf_model.py"
@@ -164,30 +167,30 @@ python training_scripts/CNN/cnn_imagenet.py
 # Vision Transformer (ViT-B/16)
 python training_scripts/ViT/vit_model_hf.py
 ```
-Τα εκπαιδευμενα μοντελα αποθηκευονται αυτοματα στον φακελο `saved_models/`.
+Τα εκπαιδευμένα μοντέλα αποθηκεύονται αυτόματα στον φάκελο `saved_models/`.
 
-3. Παραγωγη Αναλυσεων XAI:
+3. Παραγωγή Αναλύσεων XAI:
 ```bash
-# Συγκριση SHAP (RF vs DNN)
+# Σύγκριση SHAP (RF vs DNN)
 python training_scripts/compare_shap.py
 
-# Συγκριση LIME (RF vs DNN)
+# Σύγκριση LIME (RF vs DNN)
 python training_scripts/compare_lime.py
 
-# SHAP Waterfall ανα ασθενη
+# SHAP Waterfall ανά ασθενή
 python training_scripts/shap_waterfall.py
 
 # SHAP Beeswarm & Summary
 python training_scripts/shap_analysis.py
 
-# Grad-CAM για επιλεγμενα δειγματα
+# Grad-CAM για επιλεγμένα δείγματα
 python training_scripts/CNN/cnn_imagenet_gradcam.py
 
-# Attention Rollout για επιλεγμενα δειγματα
+# Attention Rollout για επιλεγμένα δείγματα
 python training_scripts/ViT/vit_attention_rollout_hf.py
 ```
 
-4. Διερευνητικη Αναλυση Δεδομενων (EDA):
+4. Διερευνητική Ανάλυση Δεδομένων (EDA):
 ```bash
 python outputs/eda/class_distribution.py
 python outputs/eda/7class_distribution.py
