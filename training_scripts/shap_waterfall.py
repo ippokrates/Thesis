@@ -5,6 +5,11 @@ import joblib
 import shap
 import matplotlib.pyplot as plt
 import os
+import sys
+from pathlib import Path
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+from mappings import FEATURE_LABELS_EN as feature_mapping
 from PIL import Image
 
 OUT_DIR = "outputs/xai/tabular/shap/"
@@ -15,21 +20,6 @@ np.random.seed(42)
 X_test = pd.read_csv("data/HDD/X_test_ready.csv")
 y_test = pd.read_csv("data/HDD/y_test_ready.csv").values.ravel()
 
-feature_mapping = {
-    'age': 'Age',
-    'sex': 'Sex',
-    'cp': 'Chest Pain Type',
-    'trestbps': 'Resting Blood Pressure',
-    'chol': 'Serum Cholesterol',
-    'fbs': 'Fasting Blood Sugar > 120 mg/dl',
-    'restecg': 'Resting ECG Results',
-    'thalach': 'Max Heart Rate Achieved',
-    'exang': 'Exercise Induced Angina',
-    'oldpeak': 'ST Depression (Oldpeak)',
-    'slope': 'Slope of ST Segment',
-    'ca': 'Number of Major Vessels (0-3)',
-    'thal': 'Thalassemia'
-}
 readable_feature_names = [feature_mapping.get(col, col) for col in X_test.columns]
 
 rf_model = joblib.load("saved_models/rf_model.pkl")
