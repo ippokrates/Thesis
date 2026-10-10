@@ -8,7 +8,6 @@ import joblib
 
 X_train = pd.read_csv("data/HDD/X_train_ready.csv")
 X_test = pd.read_csv("data/HDD/X_test_ready.csv")
-
 y_train = pd.read_csv("data/HDD/y_train_ready.csv").values.ravel() 
 y_test = pd.read_csv("data/HDD/y_test_ready.csv").values.ravel()
 

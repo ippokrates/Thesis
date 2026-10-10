@@ -40,6 +40,10 @@ diagnosis/*
 *.test
 *.log
 *.html
+!outputs/xai/tabular/lime/lime_dnn_patient_0_healthy.html
+!outputs/xai/tabular/lime/lime_dnn_patient_8_heart_disease.html
+!outputs/xai/tabular/lime/lime_rf_patient_0_healthy.html
+!outputs/xai/tabular/lime/lime_rf_patient_8_heart_disease.html
 *classification report*
 Word/
 ~$*.docx

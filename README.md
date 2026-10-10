@@ -55,7 +55,6 @@ Thesis/
 │   │   └── vit_attention_rollout_hf.py # Παραγωγή Attention Rollout
 │   ├── compare_shap.py               # Συγκριτική ανάλυση SHAP (RF vs DNN)
 │   ├── compare_lime.py               # Συγκριτική ανάλυση LIME (RF vs DNN)
-│   ├── shap_analysis.py              # Beeswarm και summary διαγράμματα SHAP
 │   └── shap_waterfall.py             # Waterfall διαγράμματα ανά ασθενή
 │
 ├── outputs/                          # Αποτελέσματα και διαγράμματα
@@ -179,9 +178,6 @@ python training_scripts/compare_lime.py
 
 # SHAP Waterfall ανά ασθενή
 python training_scripts/shap_waterfall.py
-
-# SHAP Beeswarm & Summary
-python training_scripts/shap_analysis.py
 
 # Grad-CAM για επιλεγμένα δείγματα
 python training_scripts/CNN/cnn_imagenet_gradcam.py

@@ -4,7 +4,9 @@ from tensorflow.keras.models import load_model
 import joblib
 import lime
 import lime.lime_tabular
+import matplotlib.pyplot as plt
 import os
+from PIL import Image
 import sys
 from pathlib import Path
 if str(Path(__file__).parent.parent) not in sys.path:
@@ -87,8 +89,41 @@ for idx, label in [(healthy_idx, "Healthy"), (sick_idx, "Heart_Disease")]:
         print(f"  {rule[0]}: {rule[1]:+.4f}")
     rf_exp.save_to_file(f"{OUT_DIR}/lime_rf_patient_{idx}_{label.lower()}.html")
 
+    # Merged figure: RF panel on top, DNN panel below
+    row = X_test.iloc[idx].values.reshape(1, -1)
+    rf_p = rf_predict_fn(row)[0]
+    dnn_p = dnn_predict_fn(row)[0]
+
+    rf_fig = rf_exp.as_pyplot_figure()
+    rf_fig.suptitle(f"RF LIME - Patient {idx} | {rf_p[0]*100:.0f}% Healthy, {rf_p[1]*100:.0f}% Heart Disease",
+                    fontsize=12, fontweight="bold")
+    rf_fig.tight_layout()
+    rf_fig.savefig(f"{OUT_DIR}/tmp_rf_{idx}.png", dpi=150, bbox_inches="tight")
+    plt.close(rf_fig)
+
+    dnn_fig = dnn_exp.as_pyplot_figure()
+    dnn_fig.suptitle(f"DNN LIME - Patient {idx} | {dnn_p[0]*100:.0f}% Healthy, {dnn_p[1]*100:.0f}% Heart Disease",
+                     fontsize=12, fontweight="bold")
+    dnn_fig.tight_layout()
+    dnn_fig.savefig(f"{OUT_DIR}/tmp_dnn_{idx}.png", dpi=150, bbox_inches="tight")
+    plt.close(dnn_fig)
+
+    top = Image.open(f"{OUT_DIR}/tmp_rf_{idx}.png")
+    bottom = Image.open(f"{OUT_DIR}/tmp_dnn_{idx}.png")
+    width = max(top.width, bottom.width)
+    merged = Image.new("RGB", (width, top.height + bottom.height), (255, 255, 255))
+    merged.paste(top, (0, 0))
+    merged.paste(bottom, (0, top.height))
+    merged.save(f"{OUT_DIR}/lime_patient_{idx}_{label.lower()}.png")
+    os.remove(f"{OUT_DIR}/tmp_rf_{idx}.png")
+    os.remove(f"{OUT_DIR}/tmp_dnn_{idx}.png")
+    print(f"Saved merged: {OUT_DIR}/lime_patient_{idx}_{label.lower()}.png")
+
 print(f"\n\nSaved 4 HTML reports:")
 print(f"  - {OUT_DIR}/lime_dnn_patient_{healthy_idx}_healthy.html")
 print(f"  - {OUT_DIR}/lime_dnn_patient_{sick_idx}_heart_disease.html")
 print(f"  - {OUT_DIR}/lime_rf_patient_{healthy_idx}_healthy.html")
 print(f"  - {OUT_DIR}/lime_rf_patient_{sick_idx}_heart_disease.html")
+print(f"\nSaved 2 merged figures (RF top, DNN bottom):")
+print(f"  - {OUT_DIR}/lime_patient_{healthy_idx}_healthy.png")
+print(f"  - {OUT_DIR}/lime_patient_{sick_idx}_heart_disease.png")

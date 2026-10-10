@@ -2,10 +2,11 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import (classification_report, confusion_matrix, 
                              roc_auc_score, balanced_accuracy_score, ConfusionMatrixDisplay)
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # For reproducibility
@@ -18,12 +19,15 @@ X_test = pd.read_csv("data/HDD/X_test_ready.csv")
 y_train = pd.read_csv("data/HDD/y_train_ready.csv").values.ravel()
 y_test = pd.read_csv("data/HDD/y_test_ready.csv").values.ravel()
 
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train, y_train, test_size=0.2, stratify=y_train, random_state=42)
+
 dnn_model = Sequential()
 
-# input layer
-# input_dim=13 because there are 13 medical features
+# input layer: 13 medical features
+dnn_model.add(Input(shape=(13,)))
 # We use 16 artificial neurons and the 'relu' activation function.
-dnn_model.add(Dense(16, input_dim=13, activation='relu'))
+dnn_model.add(Dense(16, activation='relu'))
 
 # turn off 20% of neurons to prevent overfitting
 dnn_model.add(Dropout(0.2))
@@ -46,7 +50,7 @@ early_stop = EarlyStopping(
 # Train the Model
 # epochs=50 network looks at the dataset 50 times
 # batch_size=16: updates after looking at 16 patients at a time.
-history = dnn_model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=1, validation_split=0.2, callbacks=[early_stop])
+history = dnn_model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=1, validation_data=(X_val, y_val), callbacks=[early_stop])
 
 # predictions on test data
 y_pred_probs = dnn_model.predict(X_test)
@@ -66,7 +70,7 @@ print(f"DNN Balanced Accuracy: {bal_acc:.4f}")
 
 # Confusion matrix as image
 cm = confusion_matrix(y_test, y_pred)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy (0)", "Heart Disease (1)"])
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy (0)", "Heart \n Disease (1)"])
 disp.plot()
 plt.title("Confusion Matrix - DNN")
 plt.savefig("outputs/evaluation/confusion_matrices/confusion_matrix_dnn.png", dpi=150)
