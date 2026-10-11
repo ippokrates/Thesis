@@ -1,17 +1,3 @@
-"""
-diagnose.py
-Δέχεται μία εικόνα δέρματος οποιουδήποτε μεγέθους και:
-  1. Κάνει πρόβλεψη με το CNN (MobileNetV2, 224×224) + Grad-CAM
-  2. Κάνει πρόβλεψη με το ViT-B/16 (HuggingFace, 224×224) + Attention Rollout
-  3. Εκτυπώνει τις πιθανότητες στο τερματικό
-  4. Αποθηκεύει ένα composite PNG με 3 sub-plots:
-       [Αρχική εικόνα] | [Grad-CAM CNN] | [Attention Rollout ViT]
-
-Χρήση:
-    python diagnose.py --image /path/to/lesion.jpg
-
-"""
-
 import os
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   # silence TF info/warning noise
@@ -108,8 +94,9 @@ def build_composite(
     cnn_decision = "Κακοήθης" if cnn_prob > 0.5 else "Καλοήθης"
     vit_decision = "Κακοήθης" if vit_prob > 0.5 else "Καλοήθης"
     plt.suptitle(
-        f"Αποτέλεσμα  ·  CNN: {cnn_decision} ({cnn_prob*100:.1f}%)   |   "
-        f"ViT: {vit_decision} ({vit_prob*100:.1f}%)",
+        # f"Αποτέλεσμα  ·  CNN: {cnn_decision} ({cnn_prob*100:.1f}%)   |   "
+        # f"ViT: {vit_decision} ({vit_prob*100:.1f}%)",
+        "Αποέλεσμα",
         fontsize=13,
         fontweight="bold",
         color="white",

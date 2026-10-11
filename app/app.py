@@ -1,22 +1,3 @@
-"""
-app/app.py — XAI Σύστημα Υποστήριξης Κλινικών Αποφάσεων
-XAI Health Decision Support System
-=======================================================
-Πτυχιακή: «Ανάπτυξη XAI εργαλείου για ερμηνεία αποφάσεων σε συστήματα υγείας»
-
-This file is the page shell only: environment setup, page config, styling, and
-the two tabs. Each tab lives in its own module:
-  · app/derm_tab.py    — 🔬 Δερματολογία — CNN (Grad-CAM) + ViT (Attention Rollout)
-  · app/cardio_tab.py  — 🫀 Καρδιολογία  — RF + DNN + SHAP + LIME
-
-Streamlit puts the script's folder on sys.path, so the sibling imports below
-resolve without __init__.py or any path setup.
-
-Εκτέλεση / Run:
-    cd /home/ippo/Desktop/Thesis
-    streamlit run app/app.py
-"""
-
 import os
 
 # Silence TF
