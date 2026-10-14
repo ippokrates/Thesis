@@ -35,6 +35,10 @@ diagnosis/*
 !outputs/evaluation/confusion_matrices/.gitkeep
 /*.png
 *.npy
+!outputs/evaluation/roc_curves/cnn_y_true.npy
+!outputs/evaluation/roc_curves/cnn_y_prob.npy
+!outputs/evaluation/roc_curves/vit_y_true.npy
+!outputs/evaluation/roc_curves/vit_y_prob.npy
 *.tmp
 *.bak
 *.test
